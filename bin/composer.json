@@ -1,0 +1,5 @@
+{
+    "require": {
+        "gettext/languages": "^2.3.0"
+    }
+}

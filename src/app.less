@@ -1,0 +1,75 @@
+@import "../node_modules/bootstrap/less/bootstrap";
+@import "../node_modules/font-awesome/less/font-awesome";
+@import (inline) "../node_modules/jqueryui/jquery-ui.min.css";
+
+@fa-font-path: "fonts";
+
+html, body {
+    height: 100%;
+}
+
+#file-picker {
+    position: absolute;
+    top: -50px;
+}
+#loader {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-attachment: fixed;
+    background-image: url("images/loading.svg");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-color: rgba(255, 255, 255, 0.2);
+    display: none;
+    z-index: 65535;
+}
+
+body.busy {
+    overflow: hidden;
+    #loader {
+        display: block;
+    }
+}
+
+#nav {
+    border-bottom: 3px outset #ddd;
+}
+#main {
+    min-height: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 50px 0 0 0;
+    border: 3px inset #ddd;
+    background-color: #777;
+}
+
+.translations-view {
+    z-index: 0;
+    display: inline-block;
+    position: absolute;
+    .panel-heading {
+        cursor: move;
+    }
+    .panel-body {
+        padding: 5px;
+        .btn {
+            margin: 0 5px;
+        }
+    }
+}
+.translations-view.current {
+    z-index: 1;
+}
+
+.ui-dialog textarea.translations-contents {
+    width: 100%;
+    box-sizing: border-box;
+    resize: none;
+    padding: 5px;
+    white-space: pre;
+    overflow: auto;
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
