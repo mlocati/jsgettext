@@ -64,6 +64,7 @@ function createPlurals() {
         let plural = plurals[localeId];
         delete plural.name;
         delete plural.plurals;
+        delete plural.supersededBy;
         plural.cases.forEach(function (pluralName, index) {
             if (!pluralNameMap.hasOwnProperty(pluralName)) {
                 throw new RangeError('Unknown plural rule name: ' + pluralName);

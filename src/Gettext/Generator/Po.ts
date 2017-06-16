@@ -5,56 +5,60 @@ export namespace Gettext {
     export namespace Generator {
         export class Po {
             public translationsToString(translations: GettextTS.Translations, setUtf8Charset?: boolean): string {
-                let previousCharset = translations.getCharset();
-                let revertPreviousCharset = setUtf8Charset && previousCharset.toUpperCase() !== 'UTF-8';
-                let lines: string[] = [];
-                try {
-                    if (revertPreviousCharset) {
-                        translations.setCharset('UTF-8');
+                let headers: string;
+                {
+                    let previousCharset = translations.getCharset();
+                    let revertPreviousCharset = setUtf8Charset && previousCharset.toUpperCase() !== 'UTF-8';
+                    try {
+                        if (revertPreviousCharset) {
+                            translations.setCharset('UTF-8');
+                        }
+                        headers = translations.getHeaders().join('\n');
+                        if (revertPreviousCharset) {
+                            translations.setCharset(previousCharset);
+                            revertPreviousCharset = false;
+                        }
+                    } catch (e) {
+                        if (revertPreviousCharset) {
+                            translations.setCharset(previousCharset);
+                        }
+                        throw e;
                     }
-                    let headers: string = '';
-                    translations.getHeaders().forEach(function (header: string): void {
-                        headers += header + '\n';
-                    });
-                    lines.push('msgid ""');
-                    lines.push('msgstr ' + Po.convertString(headers));
-                    translations.getTranslations().forEach(function (translation: GettextT.Translation): void {
-                        lines.push('');
-                        translation.translatorComments.forEach(function (comment: string): void {
-                            lines.push('#  ' + comment);
-                        });
-                        translation.extractedComments.forEach(function (comment: string): void {
-                            lines.push('#. ' + comment);
-                        });
-                        translation.references.forEach(function (comment: { filename: string, line: Number | null }): void {
-                            lines.push('#: ' + comment.filename + (comment.line ? ':' + comment.line : ''));
-                        });
-                        if (translation.flags.length > 0) {
-                            lines.push('#, ' + translation.flags.join(','));
-                        }
-                        if (translation.previousUntranslatedString.length > 0) {
-                            lines.push('#| ' + translation.previousUntranslatedString);
-                        }
-                        if (translation.context.length > 0) {
-                            lines.push('msgctxt ' + Po.convertString(translation.context));
-                        }
-                        lines.push('msgid ' + Po.convertString(translation.original));
-                        if (translation.hasPlural) {
-                            lines.push('msgid_plural ' + Po.convertString(translation.plural));
-                            translation.getTranslations().forEach((translation: string, index: number) => {
-                                lines.push('msgstr[' + index + '] ' + Po.convertString(translation));
-                            });
-                        } else {
-                            lines.push('msgstr ' + Po.convertString(translation.getTranslation()));
-                        }
-                    });
-                    lines.push('\n');
-                } catch (e) {
-                    if (revertPreviousCharset) {
-                        translations.setCharset(previousCharset);
-                    }
-                    throw e;
                 }
+                let lines: string[] = [];
+                lines.push('msgid ""');
+                lines.push('msgstr ' + Po.convertString(headers));
+                translations.getTranslations().forEach(function (translation: GettextT.Translation): void {
+                    lines.push('');
+                    translation.translatorComments.forEach(function (comment: string): void {
+                        lines.push('#  ' + comment);
+                    });
+                    translation.extractedComments.forEach(function (comment: string): void {
+                        lines.push('#. ' + comment);
+                    });
+                    translation.references.forEach(function (comment: { filename: string, line: Number | null }): void {
+                        lines.push('#: ' + comment.filename + (comment.line ? ':' + comment.line : ''));
+                    });
+                    if (translation.flags.length > 0) {
+                        lines.push('#, ' + translation.flags.join(','));
+                    }
+                    if (translation.previousUntranslatedString.length > 0) {
+                        lines.push('#| ' + translation.previousUntranslatedString);
+                    }
+                    if (translation.context.length > 0) {
+                        lines.push('msgctxt ' + Po.convertString(translation.context));
+                    }
+                    lines.push('msgid ' + Po.convertString(translation.original));
+                    if (translation.hasPlural) {
+                        lines.push('msgid_plural ' + Po.convertString(translation.plural));
+                        translation.getTranslations().forEach((translation: string, index: number) => {
+                            lines.push('msgstr[' + index + '] ' + Po.convertString(translation));
+                        });
+                    } else {
+                        lines.push('msgstr ' + Po.convertString(translation.getTranslation()));
+                    }
+                });
+                lines.push('\n');
                 return lines.join('\n');
             }
 

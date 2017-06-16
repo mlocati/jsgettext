@@ -32,6 +32,7 @@ export namespace Gettext {
                 instances[localeId] = new Plural(localeId, pluralData.cases, pluralData.formula, pluralData.examples);
             }
             delete GettextPD.PluralData.data;
+            Plural.instances = instances;
             return instances;
         }
 

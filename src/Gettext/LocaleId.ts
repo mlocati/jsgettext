@@ -25,7 +25,7 @@ export namespace Gettext {
         /**
          * Initialize the instance.
          */
-        protected constructor(languageId: string, scriptId: string, territoryId: string) {
+        public constructor(languageId: string, scriptId: string, territoryId: string) {
             this.languageId = languageId.toLowerCase();
             if (scriptId) {
                 this.scriptId = scriptId[0].toUpperCase() + scriptId.slice(1).toLowerCase();
@@ -70,7 +70,7 @@ export namespace Gettext {
             if (this.territoryId.length > 0) {
                 result.push(this.territoryId);
             }
-            return result.join('-');
+            return result.join('_');
         }
         /**
          * Get the locale display name (or an empty string if it's not available).

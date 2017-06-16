@@ -7,7 +7,6 @@
 .label,sub,sup{vertical-align:baseline}
 .collapsing,.nav .nav-divider,svg:not(:root){overflow:hidden}
 .fa,.glyphicon{-moz-osx-font-smoothing:grayscale}
-body,figure{margin:0}
 .btn-group>.btn-group,.btn-toolbar .btn,.btn-toolbar .btn-group,.btn-toolbar .input-group,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9,.dropdown-menu{float:left}
 .navbar-fixed-bottom .navbar-collapse,.navbar-fixed-top .navbar-collapse,.pre-scrollable{max-height:340px}
 html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
@@ -328,6 +327,7 @@ button,input,select,textarea{font-family:inherit;font-size:inherit;line-height:i
 a{color:#337ab7;text-decoration:none}
 a:focus,a:hover{color:#23527c;text-decoration:underline}
 a:focus{outline:-webkit-focus-ring-color auto 5px;outline-offset:-2px}
+figure{margin:0}
 .carousel-inner>.item>a>img,.carousel-inner>.item>img,.img-responsive,.thumbnail a>img,.thumbnail>img{display:block;max-width:100%;height:auto}
 .img-rounded{border-radius:6px}
 .img-thumbnail{padding:4px;line-height:1.42857143;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}
@@ -2527,6 +2527,7 @@ body .ui-tooltip{border-width:2px}
 .ui-corner-all,.ui-corner-bottom,.ui-corner-br,.ui-corner-right{border-bottom-right-radius:4px}
 .ui-widget-overlay{background:url(images/ui-bg_diagonals-thick_20_666666_40x40.png) 50% 50% #666;opacity:.5;filter:Alpha(Opacity=50)}
 .ui-widget-shadow{margin:-5px 0 0 -5px;padding:5px;background:url(images/ui-bg_flat_10_000000_40x100.png) 50% 50% repeat-x #000;opacity:.2;filter:Alpha(Opacity=20);border-radius:5px}
+body,html{margin:0;padding:0}
 #file-picker{position:absolute;top:-50px}
 #loader{position:fixed;left:0;top:0;width:100%;background-attachment:fixed;background-image:url(images/loading.svg);background-position:center center;background-repeat:no-repeat;background-color:rgba(255,255,255,.2);display:none;z-index:65535}
 body.busy{overflow:hidden}

@@ -4,12 +4,18 @@ import { Gettext as GettextTS } from './Gettext/Translations';
 import { Gettext as GettextEP } from './Gettext/Extractor/Po';
 import { Gettext as GettextEM } from './Gettext/Extractor/Mo';
 import { Gettext as GettextGP } from './Gettext/Generator/Po';
+import { Gettext as GettextGM } from './Gettext/Generator/Mo';
 import { Gettext as GettextC } from './Gettext/Charset';
+import { Gettext as GettextLI } from './Gettext/LocaleId';
+import { Gettext as GettextL } from './Gettext/Language';
+import { Gettext as GettextT } from './Gettext/Territory';
+import { Gettext as GettextP } from './Gettext/Plural';
+
 import * as $ from 'jquery';
 import 'jqueryui';
 import * as FileSaver from 'file-saver';
 
-(() => {
+$(() => {
 
     class TranslationsView {
         public readonly name: string;
@@ -26,25 +32,37 @@ import * as FileSaver from 'file-saver';
                         .append($('<div class="name" />').text(this.name))
                     )
                     .append($('<div class="panel-body" />')
-                        .append($('<button class="btn btn-xs btn-info"><i class="fa fa-eye"></i></button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="View .PO"><i class="fa fa-eye"></i></button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.showContents();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-info"><i class="fa fa-arrow-right"></i>.pot</button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create language-specific .PO"><i class="fa fa-arrow-right"></i>.po</button>')
+                            .on('click', (e: JQueryEventObject) => {
+                                e.preventDefault();
+                                me.toPo();
+                            })
+                        )
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create empty .POT dictionary"><i class="fa fa-arrow-right"></i>.pot</button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.toPot();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-info"><i class="fa fa-arrow-down"></i>.' + (/\.pot/i.test(me.name) ? 'pot' : 'po') + '</button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip"><i class="fa fa-arrow-down" title="Download as .PO/.POT format"></i>.' + (/\.pot/i.test(me.name) ? 'pot' : 'po') + '</button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.downloadAsPo();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-danger"><i class="fa fa-trash-o"></i></button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip"><i class="fa fa-arrow-down" title="Download as .MO format"></i>.mo</button>')
+                            .on('click', (e: JQueryEventObject) => {
+                                e.preventDefault();
+                                me.downloadAsMo();
+                            })
+                        )
+                        .append($('<button class="btn btn-xs btn-danger" data-toggle="tooltip"><i class="fa fa-trash-o" title="Remove"></i></button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.$div.remove();
@@ -60,6 +78,7 @@ import * as FileSaver from 'file-saver';
                         me.$div.addClass('current');
                     })
             );
+            this.$div.find('[data-toggle="tooltip"]').tooltip();
         }
         public showContents(): void {
             if (this.$contents !== undefined) {
@@ -96,6 +115,28 @@ import * as FileSaver from 'file-saver';
                 },
             });
         }
+        public toPo(): void {
+            pickLocaleId((localeId: GettextLI.LocaleId): boolean => {
+                debugger;
+                let plural = GettextP.Plural.search(localeId);
+                if (plural === null) {
+                    if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
+                        return false;
+                    }
+                }
+                let translations = this.translations.clone();
+                ['Last-Translator'].forEach((cleanHeader) => {
+                    if (translations.getHeader(cleanHeader)) {
+                        translations.setHeader(cleanHeader, '');
+                    }
+                })
+                translations.setLanguage(localeId.toString(), true);
+                let match = /^(.+)\.\w+/.exec(this.name);
+                let name = (match === null ? this.name : match[1]) + '-' + localeId.toString() + '.po';
+                new TranslationsView(name, translations);
+                return true;
+            });
+        }
         public toPot(): TranslationsView {
             let name: string;
             let match: RegExpExecArray | null;
@@ -114,13 +155,21 @@ import * as FileSaver from 'file-saver';
         public downloadAsPo(): void {
             let gp = new GettextGP.Generator.Po();
             let po = gp.translationsToString(this.translations, true);
-            let blob = GettextC.Charset.stringToUtf8Blob(po, '');
+            let blob = GettextC.Charset.stringToUtf8Blob(po, 'text/x-po; charset=utf-8');
             let name = this.name;
             if (!/\.pot?/i.test(name)) {
                 let match = /^(.+)\.\w+/.exec(name);
                 name = (match === null) ? name + '.po' : match[1] + '.po';
             }
-            FileSaver.saveAs(blob, name);
+            FileSaver.saveAs(blob, name, true);
+        }
+        public downloadAsMo(): void {
+            let gm = new GettextGM.Generator.Mo();
+            let mo = gm.translationsBytes(this.translations);
+            let blob = new Blob([mo], { type: 'application/octet-stream' });
+            let match = /^(.+)\.\w+$/.exec(this.name);
+            let name = (match === null ? this.name : match[1]) + '.mo';
+            FileSaver.saveAs(blob, name, true);
         }
     }
 
@@ -150,6 +199,61 @@ import * as FileSaver from 'file-saver';
             window.alert('Error loading ' + name + ':\n' + (e.message || e.toString()));
         }
     }
+
+    function pickLocaleId(callback: (localeId: GettextLI.LocaleId) => boolean): void {
+        let $languages = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
+        GettextL.Language.getAll(true).forEach((l) => {
+            $languages.append($('<option />').val(l.id).text(l.name));
+
+        });
+        let $territories = $('<select class="form-control" />').append('<option value="" selected="selected">-- none --</option>');
+        GettextT.Territory.getAll().forEach((t) => {
+            $territories.append($('<option />').val(t.id).text(t.name));
+        });
+        let $div = $('<form />')
+            .append($('<div class="form-group" />')
+                .append('<label for="pick-language">Language</label>')
+                .append($languages)
+            )
+            .append($('<div class="form-group" />')
+                .append('<label for="pick-territory">Territory</label>')
+                .append($territories)
+            )
+            ;
+        $div.dialog({
+            title: 'Choose language details',
+            modal: true,
+            resizable: false,
+            width: 400,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    click: () => {
+                        $div.dialog('close');
+                    }
+                },
+                {
+                    text: 'OK',
+                    click: () => {
+                        let languageId = $languages.val();
+                        if (!languageId) {
+                            $languages.focus();
+                            return;
+                        }
+                        let territoryId = $territories.val();
+                        let localeId = new GettextLI.LocaleId(languageId, '', territoryId);
+                        if (callback(localeId)) {
+                            $div.dialog('close');
+                        }
+                    }
+                }
+            ],
+            close: () => {
+                $div.remove();
+            }
+        });
+    }
+
     (() => {
         var $filePicker: JQuery;
         $('#upload-file').on('click', (e: JQueryEventObject) => {
@@ -184,6 +288,6 @@ import * as FileSaver from 'file-saver';
                 loadFile(oe.dataTransfer.files[i]);
             }
         })
+        .removeClass('busy')
         ;
-
-})();
+});

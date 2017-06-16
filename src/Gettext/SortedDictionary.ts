@@ -47,6 +47,15 @@ export namespace Gettext {
         }
 
         /**
+         * Get the keys of all the values present in the dictionary.
+         *
+         * @returns string[]
+         */
+        public getKeys(): string[] {
+            return this.list.slice();
+        }
+
+        /**
          * Remove a value given its key.
          *
          * @param key The key of the value to be removed
@@ -119,6 +128,21 @@ export namespace Gettext {
          */
         public isEmpty(): boolean {
             return this.list.length === 0;
+        }
+
+        /**
+         * Create a clone of this dictionary.
+         * Please remark that dictionary items are not cloned (until they are objects that implements the clone method).
+         */
+        public clone(): SortedDictionary {
+            let me = this;
+            let result = new SortedDictionary();
+            result.list = me.list.slice(0);
+            result.list.forEach((key) => {
+                let item = me.dictionary[key];
+                result.dictionary[key] = (item && item.clone && item.clone.apply && item.clone.call) ? item.clone() : item;
+            })
+            return result;
         }
     }
 }
