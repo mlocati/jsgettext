@@ -16,7 +16,8 @@
     "file-saver": "^1.3.3",
     "font-awesome": "^4.7.0",
     "jquery": "^2.2.4",
-    "jqueryui": "^1.11.1",
+	"jquery-ui": "~1.10.4",
+    "jquery-ui-twbs-less": "github:dc-development/jquery-ui-less",
     "text-encoding": "^0.6.4"
   },
   "devDependencies": {

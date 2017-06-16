@@ -12,9 +12,11 @@ import { Gettext as GettextT } from './Gettext/Territory';
 import { Gettext as GettextP } from './Gettext/Plural';
 
 import * as $ from 'jquery';
-import 'jqueryui';
+(<any>window).jQuery = $;
+import 'bootstrap/js/tooltip.js';
+import 'jquery-ui/draggable';
+import 'jquery-ui/dialog';
 import * as FileSaver from 'file-saver';
-
 $(() => {
 
     class TranslationsView {

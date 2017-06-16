@@ -1,8 +1,25 @@
-@import "../node_modules/bootstrap/less/bootstrap";
 @import "../node_modules/font-awesome/less/font-awesome";
-@import (inline) "../node_modules/jqueryui/jquery-ui.min.css";
+@import "../node_modules/bootstrap/less/bootstrap";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.variables.less";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.core.less";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.button.less";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.resizable.less";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.dialog.less";
+@import "../node_modules/jquery-ui-twbs-less/less/jquery.ui.theme.less";
 
+@icon-font-path: "fonts/";
 @fa-font-path: "fonts";
+@ui_imagesDir: "images";
+
+.ui-dialog-titlebar-close {
+    .ui-icon-closethick, .ui-button-text {
+        display: none!important;
+    }
+}
+.ui-dialog .ui-resizable-se {
+    right: 0;
+    cursor: se-resize;
+}
 
 html, body {
     height: 100%;
