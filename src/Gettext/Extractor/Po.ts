@@ -60,7 +60,7 @@ export namespace Gettext {
                             });
                             break;
                         case '|':
-                            result.previousUntranslatedString = comment.substr(2).replace(/^\s+/, '');
+                            result.previousUntranslatedStrings.push(comment.substr(2).replace(/^\s+/, ''));
                             break;
                         case ':':
                             comment.substr(2).replace(/^\s+/, '').split(',').forEach((reference: string) => {

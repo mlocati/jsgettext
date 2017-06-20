@@ -45,9 +45,9 @@ export namespace Gettext {
                     if (translation.flags.length > 0) {
                         lines.push('#, ' + translation.flags.join(','));
                     }
-                    if (translation.previousUntranslatedString.length > 0) {
-                        lines.push('#| ' + translation.previousUntranslatedString);
-                    }
+                    translation.previousUntranslatedStrings.forEach( (comment: string): void => {
+                        lines.push('#| ' + comment);
+                    });
                     if (translation.context.length > 0) {
                         lines.push('msgctxt ' + Po.convertString(translation.context));
                     }

@@ -195,7 +195,7 @@ $(() => {
             let match = /^(.+)(\.\w+)/.exec(me.name);
             let base = match === null ? me.name : match[1];
             let extension = match === null ? '' : match[2];
-            let $name : JQuery;
+            let $name: JQuery;
             me.$div.find('.name')
                 .width(me.$div.find('.name').width())
                 .empty()
@@ -248,7 +248,7 @@ $(() => {
                 throw new Error('Unrecognized file type');
             }
             let fileReader = new FileReader();
-            fileReader.onload = function() {
+            fileReader.onload = function () {
                 try {
                     let arrayBuffer = this.result;
                     let translations = loader(arrayBuffer);

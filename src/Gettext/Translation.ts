@@ -46,7 +46,7 @@ export namespace Gettext {
         /**
          * The previous untranslated string.
          */
-        public previousUntranslatedString: string;
+        public readonly previousUntranslatedStrings: string[];
 
         /**
          * The translator comments.
@@ -73,7 +73,7 @@ export namespace Gettext {
             this.extractedComments = [];
             this.references = [];
             this.flags = [];
-            this.previousUntranslatedString = '';
+            this.previousUntranslatedStrings = [];
             this.translatorComments = [];
             this.translations = this.hasPlural ? ['', ''] : [''];
             this.id = Translation.generateId(this.context, this.original)
@@ -260,7 +260,7 @@ export namespace Gettext {
                 result.references.push({ filename: reference.filename, line: reference.line });
             });
             result.flags.concat(this.flags);
-            result.previousUntranslatedString = this.previousUntranslatedString;
+            Array.prototype.push.apply(result.previousUntranslatedStrings, this.previousUntranslatedStrings);
             if (untranslated) {
                 if (this.hasPlural || this.translations.length !== 2) {
                     result.setTranslations(Array(this.translations.length).join('.').split('.'))
