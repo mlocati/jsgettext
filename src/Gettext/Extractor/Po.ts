@@ -31,7 +31,7 @@ export namespace Gettext {
                 }
                 this.lineIndex = 0;
             }
-            private getNextTranslation(): GettextT.Translation | string | null {
+            private getNextTranslation(): GettextT.Translation | { comments: string[], headers: string } | null {
                 if (this.lineIndex === this.lines.length) {
                     return null;
                 }
@@ -45,8 +45,8 @@ export namespace Gettext {
                 } else {
                     msgstrs = [this.getMsgStrSingular()];
                 }
-                if (isPlural === false && msgids[0] === '') {
-                    return msgstrs[0];
+                if (msgctxt.length === 0 && msgids[0].length === 0 && isPlural === false) {
+                    return { comments: comments, headers: msgstrs[0] };
                 }
                 let result = new GettextT.Translation(msgctxt, msgids[0], isPlural ? msgids[1] : '');
                 comments.forEach(function (comment: string) {
@@ -217,10 +217,13 @@ export namespace Gettext {
             public static getTranslationsFromString(string: string): GettextTS.Translations {
                 let po = new Gettext.Extractor.Po(string);
                 let translations = GettextTS.Translations.createEmpty();
-                let translation: GettextT.Translation | string | null;
+                let translation: GettextT.Translation | { comments: string[], headers: string } | null;
                 while ((translation = po.getNextTranslation()) !== null) {
-                    if (typeof translation === 'string') {
-                        translation.split('\n').forEach(function (header: string) {
+                    if (translation instanceof GettextT.Translation) {
+                        translations.add(translation);
+                    } else {
+                        Array.prototype.push.apply(translations.headerComments, translation.comments);
+                        translation.headers.split('\n').forEach(function (header: string) {
                             header = header.replace(/^\s+|\s+$/g, '');
                             if (header.length === 0) {
                                 return;
@@ -234,8 +237,6 @@ export namespace Gettext {
                                 translations.setHeader(header, '');
                             }
                         });
-                    } else {
-                        translations.add(translation);
                     }
                 }
                 return translations;

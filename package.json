@@ -35,7 +35,7 @@
   "scripts": {
     "build-js": "webpack --colors --optimize-minimize",
     "build-js-debug": "webpack --colors",
-    "watch-js": "webpack --progress --colors --watch",
+    "watch-js": "webpack --progress --colors --watch --optimize-minimize",
     "build-css": "lessc -clean-css=\"--advanced --keep-line-breaks --compatibility=\" src/app.less docs/assets/app.css",
     "build-css-debug": "lessc --lint src/app.less docs/assets/app.css"
   }

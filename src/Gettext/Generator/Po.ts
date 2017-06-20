@@ -26,10 +26,13 @@ export namespace Gettext {
                     }
                 }
                 let lines: string[] = [];
-                lines.push('msgid ""');
-                lines.push('msgstr ' + Po.convertString(headers));
-                translations.getTranslations().forEach(function (translation: GettextT.Translation): void {
+                if (headers.length > 0) {
+                    Array.prototype.push.apply(lines, translations.headerComments);
+                    lines.push('msgid ""');
+                    lines.push('msgstr ' + Po.convertString(headers));
                     lines.push('');
+                }
+                translations.getTranslations().forEach(function (translation: GettextT.Translation): void {
                     translation.translatorComments.forEach(function (comment: string): void {
                         lines.push('#  ' + comment);
                     });
@@ -57,8 +60,8 @@ export namespace Gettext {
                     } else {
                         lines.push('msgstr ' + Po.convertString(translation.getTranslation()));
                     }
+                    lines.push('');
                 });
-                lines.push('\n');
                 return lines.join('\n');
             }
 

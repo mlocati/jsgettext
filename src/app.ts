@@ -106,7 +106,7 @@ $(() => {
                 ],
                 title: 'Contents of ' + me.name,
                 open: (): void => {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         me.$contents.trigger('dialogresize');
                     }, 10);
                     me.$contents.find('textarea').scrollTop(0);
@@ -276,6 +276,55 @@ $(() => {
             $filePicker.click();
         });
     })();
+    $('#paste-po').on('click', (e: JQueryEventObject) => {
+        e.preventDefault();
+        let $dialog = $('<div />')
+            .append($('<textarea class="translations-contents" />'))
+            .on('dialogresize', function () {
+                $dialog.find('textarea').height($dialog.height() - 20);
+            });
+        let $textarea = $dialog.find('textarea');
+        $('#main').append($dialog);
+        $dialog.dialog({
+            buttons: [
+                {
+                    text: 'Cancel',
+                    click: function () {
+                        $dialog.dialog('close');
+                    }
+                },
+                {
+                    text: 'Parse',
+                    click: function () {
+                        let translations: GettextTS.Translations;
+                        try {
+                            translations = GettextEP.Extractor.Po.getTranslationsFromString($textarea.val());
+                        }
+                        catch (e) {
+                            window.alert(e.message || e.toString());
+                            $textarea.focus();
+                            return;
+                        }
+                        new TranslationsView('pasted.po', translations);
+                        $dialog.dialog('close');
+                    }
+                }
+            ],
+            title: 'Paste a .po file contents',
+            open: (): void => {
+                setTimeout(function () {
+                    $dialog.trigger('dialogresize');
+                }, 10);
+                $textarea.focus();
+            },
+            width: 450,
+            height: 300,
+            close: (): void => {
+                $dialog.remove();
+            },
+        });
+    });
+
     $(document.body)
         .on('dragover', (e: JQueryEventObject) => {
             e.stopPropagation();

@@ -34,6 +34,11 @@ export namespace Gettext {
         public static defaultHeaders: GettextST.SortedDictionary;
 
         /**
+         * The comments before the header.
+         */
+        public readonly headerComments: string[];
+
+        /**
          * The gettext headers.
          */
         private readonly headers: GettextST.SortedDictionary;
@@ -57,6 +62,7 @@ export namespace Gettext {
          * Initialize the instance.
          */
         private constructor(headers?: GettextST.SortedDictionary, list?: GettextST.SortedDictionary) {
+            this.headerComments = [];
             this.headers = headers ? headers : new GettextST.SortedDictionary();
             this.list = list ? list : new GettextST.SortedDictionary();
             this.charset = '';
@@ -282,6 +288,7 @@ export namespace Gettext {
                 this.headers.clone(),
                 this.list.clone()
             );
+            Array.prototype.push.apply(result.headerComments, this.headerComments);
             result.charset = this.charset;
             if (this.pluralForms !== null) {
                 result.pluralForms = { numPlurals: this.pluralForms.numPlurals, pluralFormula: this.pluralForms.pluralFormula };
@@ -293,6 +300,7 @@ export namespace Gettext {
          */
         public toPot(): Translations {
             let result = Translations.createEmpty();
+            Array.prototype.push.apply(result.headerComments, this.headerComments);
             this.headers.all().forEach((header: { key: string, value: string }): void => {
                 switch (header.key) {
                     case Translations.HEADER_LANGUAGE:
