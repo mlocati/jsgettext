@@ -6,6 +6,7 @@ import { Gettext as GettextC } from '../Charset';
 export namespace Gettext {
     export namespace Generator {
         export class Mo {
+            public littleEndian: boolean = true;
             private static concatenateBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
                 let result = new Uint8Array(a.byteLength + b.byteLength);
                 result.set(a, 0);
@@ -45,7 +46,6 @@ export namespace Gettext {
                     }
                 });
                 let translationIds = messages.getKeys().sort();
-                console.log(translationIds);
                 let originalsTable = new Uint8Array(0);
                 let translationsTable = new Uint8Array(0);
                 let originalsIndex: { relativeOffset: number, length: number }[] = [];
@@ -100,38 +100,38 @@ export namespace Gettext {
                 ));
                 let moOffset = 0;
                 // Magic number
-                moView.setUint32(moOffset, 0x950412de);
+                moView.setUint32(moOffset, 0x950412de, this.littleEndian);
                 moOffset += 4;
                 // File format revision
-                moView.setUint32(moOffset, 0);
+                moView.setUint32(moOffset, 0, this.littleEndian);
                 moOffset += 4;
                 // Number of strings
-                moView.setUint32(moOffset, numEntries);
+                moView.setUint32(moOffset, numEntries, this.littleEndian);
                 moOffset += 4;
                 // Offset of table with original strings
-                moView.setUint32(moOffset, originalsIndexOffset);
+                moView.setUint32(moOffset, originalsIndexOffset, this.littleEndian);
                 moOffset += 4;
                 // Offset of table with translation strings
-                moView.setUint32(moOffset, translationsIndexOffset);
+                moView.setUint32(moOffset, translationsIndexOffset, this.littleEndian);
                 moOffset += 4;
                 // Size of hashing table: we don't use it.
-                moView.setUint32(moOffset, 0);
+                moView.setUint32(moOffset, 0, this.littleEndian);
                 moOffset += 4;
                 // Offset of hashing table: it would start right after the translations index table
-                moView.setUint32(moOffset, translationsIndexOffset + translationsIndexSize);
+                moView.setUint32(moOffset, translationsIndexOffset + translationsIndexSize, this.littleEndian);
                 moOffset += 4;
                 // Write the lengths & offsets of the original strings
                 originalsIndex.forEach((index: { relativeOffset: number, length: number }): void => {
-                    moView.setUint32(moOffset, index.length);
+                    moView.setUint32(moOffset, index.length, this.littleEndian);
                     moOffset += 4;
-                    moView.setUint32(moOffset, originalsStringsOffset + index.relativeOffset);
+                    moView.setUint32(moOffset, originalsStringsOffset + index.relativeOffset, this.littleEndian);
                     moOffset += 4;
                 });
                 // Write the lengths & offsets of the translated strings
                 translationsIndex.forEach((index: { relativeOffset: number, length: number }): void => {
-                    moView.setUint32(moOffset, index.length);
+                    moView.setUint32(moOffset, index.length, this.littleEndian);
                     moOffset += 4;
-                    moView.setUint32(moOffset, translationsStringsOffset + index.relativeOffset);
+                    moView.setUint32(moOffset, translationsStringsOffset + index.relativeOffset, this.littleEndian);
                     moOffset += 4;
                 });
                 let mo = new Uint8Array(moView.buffer);
