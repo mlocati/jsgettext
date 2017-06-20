@@ -203,9 +203,9 @@ export namespace Gettext {
                 let rawString = '\n' + string.replace(/[ \t]+/g, ' ').replace(/ \n|\n /g, '\n').replace(/\n\n+/g, '\n').replace(/"\n"/g, '');
                 let rawMatches = /\nmsgid ""\nmsgstr ([^\n]+)\n/m.exec(rawString);
                 if (rawMatches !== null) {
-                    rawMatches = /\\n\s*Content-Type\s*:\s*text\/plain;(.*;)?\s*charset=([\w\-]+)/.exec('\\n' + rawMatches);
+                    rawMatches = /(\\n|")\s*Content-Type\s*:\s*text\/plain\s*;(.*;)?\s*charset\s*=\s*([\w\-]+)/.exec('\\n' + rawMatches[1]);
                     if (rawMatches !== null) {
-                        let newCharset = rawMatches[2].toLowerCase();
+                        let newCharset = rawMatches[3].toLowerCase();
                         if (newCharset !== charset) {
                             charset = newCharset;
                             string = GettextC.Charset.bufferToString(buffer, charset);
