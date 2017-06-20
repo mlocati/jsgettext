@@ -11,14 +11,22 @@
 @fa-font-path: "fonts";
 @ui_imagesDir: "images";
 
-.ui-dialog-titlebar-close {
-    .ui-icon-closethick, .ui-button-text {
-        display: none!important;
+.ui-dialog {
+    .ui-dialog-titlebar {
+        .ui-dialog-titlebar-close {
+        font-size: 0;
+        margin-right: 10px;
+        margin-top: 7px;
+        }
     }
-}
-.ui-dialog .ui-resizable-se {
-    right: 0;
-    cursor: se-resize;
+    .ui-dialog-content {
+        margin-right: 0;
+    }
+    .ui-resizable-se {
+        right: 0;
+        position: absolute;
+        cursor: se-resize;
+    }
 }
 
 html, body {

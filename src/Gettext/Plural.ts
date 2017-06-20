@@ -1,12 +1,14 @@
-import { Gettext as GettextPD } from './PluralData';
 import { Gettext as GettextPC } from './PluralCase';
 import { Gettext as GettextLI } from './LocaleId';
+
+import _d from './data/plural.json';
+let data = <{ [id: string]: { formula: string, cases: number[], examples: Array<string | null> } }> _d;
 
 export namespace Gettext {
     /**
      * Helper class to work with territories.
      */
-    export class Plural extends GettextPD.PluralData {
+    export class Plural {
         public readonly localeId: string;
         public readonly numPlurals: number;
         public readonly cases: GettextPC.PluralCase[];
@@ -27,11 +29,10 @@ export namespace Gettext {
                 return Plural.instances;
             }
             let instances: { [id: string]: Plural } = {};
-            for (let localeId in Plural.data) {
-                let pluralData = Plural.data[localeId];
+            for (let localeId in data) {
+                let pluralData = data[localeId];
                 instances[localeId] = new Plural(localeId, pluralData.cases, pluralData.formula, pluralData.examples);
             }
-            delete GettextPD.PluralData.data;
             Plural.instances = instances;
             return instances;
         }
@@ -45,7 +46,6 @@ export namespace Gettext {
          * @param examples The examples for every plural case
          */
         private constructor(localeId: string, cases: GettextPC.PluralCase[], formula: string, examples: Array<string | null>) {
-            super();
             this.localeId = localeId;
             this.numPlurals = cases.length;
             this.cases = cases;

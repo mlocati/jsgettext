@@ -2,18 +2,15 @@
 
 'use strict';
 
-function processTemplate(name, placeholders) {
+function saveJson(name, data) {
     let fs = require('fs');
     let path = require('path');
-    let relativeName = 'templates/' + name + '.ts';
-    let template = fs.readFileSync(__dirname + '/' + relativeName, { encoding: 'utf8' });
-    template = template.replace(/_____REMOVE_____/g, '');
-    template = '// WARNING: this file has been generated from ' + path.basename(__dirname) + '/' + relativeName + ' - do not edit\n\n' + template;
-    for (let placeholderName in placeholders) {
-        let rx = new RegExp('\\/\\*{5}(.*?)<<' + placeholderName + '>>(.*?)\\*{5}\\/', 'g');
-        template = template.replace(rx, '$1' + placeholders[placeholderName] + '$2');
+    let dirPath = path.resolve(__dirname, '..', 'src', 'Gettext', 'data');
+    if (fs.existsSync(dirPath) !== true) {
+        fs.mkdirSync(dirPath);
     }
-    fs.writeFileSync(__dirname + '/../src/Gettext/' + name + '.ts', template, { encoding: 'utf8' });
+    let jsonPath = path.resolve(dirPath, name) + '.json';
+    fs.writeFileSync(jsonPath, JSON.stringify({default: data}));
 }
 
 function createLanguages() {
@@ -24,7 +21,7 @@ function createLanguages() {
             list[languageId] = languages[languageId];
         }
     }
-    processTemplate('LanguageData', { CLDR_LANGUAGES: JSON.stringify(list) });
+    saveJson('language', list);
 }
 
 function createScripts() {
@@ -35,7 +32,7 @@ function createScripts() {
             list[scriptId] = scripts[scriptId];
         }
     }
-    processTemplate('ScriptData', { CLDR_SCRIPTS: JSON.stringify(list) });
+    saveJson('script', list);
 }
 
 function createTerritories() {
@@ -46,7 +43,7 @@ function createTerritories() {
             list[territoryId] = territories[territoryId];
         }
     }
-    processTemplate('TerritoryData', { CLDR_TERRITORIES: JSON.stringify(list) });
+    saveJson('territory', list);
 }
 
 function createPlurals() {
@@ -81,7 +78,7 @@ function createPlurals() {
         plural.examples = examples;
         list[localeId] = plural;
     }
-    processTemplate('PluralData', { CLDR_PLURALS: JSON.stringify(list) });
+    saveJson('plural', list);
 }
 console.log('Parsing languages...');
 createLanguages();

@@ -5,7 +5,11 @@ module.exports = {
         filename: 'app.js'
     },
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts', '.js', '.json'],
+        alias: {
+            'jquery-ui/draggable': __dirname + '/node_modules/jquery-ui/ui/widgets/draggable',
+            'jquery-ui/dialog': __dirname + '/node_modules/jquery-ui/ui/widgets/dialog',
+        }
     },
     module: {
         rules: [
@@ -14,5 +18,5 @@ module.exports = {
                 loader: 'ts-loader'
             }
         ]
-    }
+    },
 }

@@ -1,24 +1,25 @@
-import { Gettext as GettextLD } from './LanguageData';
+import _d from './data/language.json';
+let data = <{ [id: string]: string }> _d;
 
 export namespace Gettext {
     /**
      * Helper class to work with languages.
      */
-    export class Language extends GettextLD.LanguageData {
+    export class Language {
         /**
          * Get the name of a language given its id.
          *
          * @param languageId The language identifier
          */
         public static getName(languageId: string): string {
-            return (languageId in GettextLD.LanguageData.data) ? GettextLD.LanguageData.data[languageId] : '';
+            return (languageId in data) ? data[languageId] : '';
         }
 
         /**
          * Get all the language IDs.
          */
         public static getAllIds(): string[] {
-            return Object.keys(GettextLD.LanguageData.data.keys).sort();
+            return Object.keys(data.keys).sort();
         }
 
         /**
@@ -26,9 +27,9 @@ export namespace Gettext {
          */
         public static getAll(excludeCompoundNames?: boolean): { id: string, name: string }[] {
             let result: { id: string, name: string }[] = [];
-            for (let languageId in GettextLD.LanguageData.data) {
+            for (let languageId in data) {
                 if (excludeCompoundNames === false || languageId.indexOf('-') < 0) {
-                    result.push({ id: languageId, name: GettextLD.LanguageData.data[languageId] });
+                    result.push({ id: languageId, name: data[languageId] });
                 }
             }
             result.sort((a, b): number => {

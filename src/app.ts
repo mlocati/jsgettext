@@ -106,7 +106,9 @@ $(() => {
                 ],
                 title: 'Contents of ' + me.name,
                 open: (): void => {
-                    me.$contents.trigger('dialogresize');
+                    setTimeout(function() {
+                        me.$contents.trigger('dialogresize');
+                    }, 10);
                     me.$contents.find('textarea').scrollTop(0);
                 },
                 width: 450,
@@ -119,7 +121,6 @@ $(() => {
         }
         public toPo(): void {
             pickLocaleId((localeId: GettextLI.LocaleId): boolean => {
-                debugger;
                 let plural = GettextP.Plural.search(localeId);
                 if (plural === null) {
                     if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
