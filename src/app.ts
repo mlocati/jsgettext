@@ -14,13 +14,14 @@ import { Gettext as GettextP } from './Gettext/Plural';
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
 import 'bootstrap/js/tooltip.js';
+import 'bootstrap/js/dropdown.js';
 import 'jquery-ui/draggable';
 import 'jquery-ui/dialog';
 import * as FileSaver from 'file-saver';
 $(() => {
 
     class TranslationsView {
-        public readonly name: string;
+        public name: string;
         public readonly translations: GettextTS.Translations;
         public readonly $div: JQuery;
         private $contents: JQuery;
@@ -31,38 +32,52 @@ $(() => {
             $('#main').append(
                 this.$div = $('<div class="translations-view panel panel-default" />')
                     .append($('<div class="panel-heading" />')
-                        .append($('<div class="name" />').text(this.name))
+                        .append($('<div class="name" title="Double-click to rename" />')
+                            .text(this.name)
+                            .on('dblclick', () => {
+                                me.startRename();
+                            })
+                        )
                     )
                     .append($('<div class="panel-body" />')
-                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="View .PO"><i class="fa fa-eye"></i></button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="View .po"><i class="fa fa-eye"></i></button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.showContents();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create language-specific .PO"><i class="fa fa-arrow-right"></i>.po</button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create language-specific .po"><i class="fa fa-arrow-right"></i>.po</button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.toPo();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create empty .POT dictionary"><i class="fa fa-arrow-right"></i>.pot</button>')
+                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create empty .pot dictionary"><i class="fa fa-arrow-right"></i>.pot</button>')
                             .on('click', (e: JQueryEventObject) => {
                                 e.preventDefault();
                                 me.toPot();
                             })
                         )
-                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip"><i class="fa fa-arrow-down" title="Download as .PO/.POT format"></i>.' + (/\.pot/i.test(me.name) ? 'pot' : 'po') + '</button>')
-                            .on('click', (e: JQueryEventObject) => {
-                                e.preventDefault();
-                                me.downloadAsPo();
-                            })
-                        )
-                        .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip"><i class="fa fa-arrow-down" title="Download as .MO format"></i>.mo</button>')
-                            .on('click', (e: JQueryEventObject) => {
-                                e.preventDefault();
-                                me.downloadAsMo();
-                            })
+                        .append($('<div class="btn-group" />')
+                            .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-download" title="Download"></i> <span class="caret"></span></button>'))
+                            .append($('<ul class="dropdown-menu" />')
+                                .append($('<li />')
+                                    .append($('<a href="#">Download .' + (/\.pot/i.test(me.name) ? 'pot' : 'po') + '</a>')
+                                        .on('click', (e: JQueryEventObject) => {
+                                            e.preventDefault();
+                                            me.downloadAsPo();
+                                        })
+                                    )
+                                )
+                                .append($('<li />')
+                                    .append($('<a href="#">Download .mo</a>')
+                                        .on('click', (e: JQueryEventObject) => {
+                                            e.preventDefault();
+                                            me.downloadAsMo();
+                                        })
+                                    )
+                                )
+                            )
                         )
                         .append($('<button class="btn btn-xs btn-danger" data-toggle="tooltip"><i class="fa fa-trash-o" title="Remove"></i></button>')
                             .on('click', (e: JQueryEventObject) => {
@@ -91,7 +106,8 @@ $(() => {
             let gp = new GettextGP.Generator.Po();
             me.$contents = $('<div />')
                 .append($('<textarea class="translations-contents" readonly="readonly" />').val(gp.translationsToString(me.translations)))
-                .on('dialogresize', function () {
+                .on('dialogresize', () => {
+                    me.$contents.closest('.ui-dialog').find('.ui-dialog-content').css('width', '100%');
                     me.$contents.find('textarea').height(me.$contents.height() - 20);
                 })
             $('#main').append(me.$contents);
@@ -99,20 +115,20 @@ $(() => {
                 buttons: [
                     {
                         text: 'Close',
-                        click: function () {
+                        click: () => {
                             me.$contents.dialog('close');
                         }
                     }
                 ],
                 title: 'Contents of ' + me.name,
                 open: (): void => {
-                    setTimeout(function () {
+                    setTimeout(() => {
                         me.$contents.trigger('dialogresize');
                     }, 10);
                     me.$contents.find('textarea').scrollTop(0);
                 },
-                width: 450,
-                height: 300,
+                width: Math.min(Math.max($(window).width() * .75, 200), 600),
+                height: Math.min(Math.max($(window).height() * .75, 200), 400),
                 close: (): void => {
                     me.$contents.remove();
                     delete me.$contents;
@@ -174,6 +190,50 @@ $(() => {
             let name = (match === null ? this.name : match[1]) + '.mo';
             FileSaver.saveAs(blob, name, true);
         }
+        public startRename(): void {
+            let me = this;
+            let match = /^(.+)(\.\w+)/.exec(me.name);
+            let base = match === null ? me.name : match[1];
+            let extension = match === null ? '' : match[2];
+            let $name : JQuery;
+            me.$div.find('.name')
+                .width(me.$div.find('.name').width())
+                .empty()
+                .append($name = $('<input type="text" class="form-control" style="width: 100%" />')
+                    .data('extension', extension)
+                    .val(base)
+                    .on('keydown', (e: JQueryEventObject) => {
+                        switch (e.which) {
+                            case 27: // Esc
+                                $name.off('blur');
+                                me.$div.find('.name').css('width', 'auto').empty().text(me.name);
+                                break;
+                            case 13:
+                                let newName = $.trim($name.val()).replace(/\.+$/, '');
+                                if (newName.length === 0) {
+                                    $name.val('').focus();
+                                    return;
+                                }
+                                $name.off('blur');
+                                me.name = newName + $name.data('extension');
+                                me.$div.find('.name').css('width', 'auto').empty().text(me.name);
+                                break;
+                        }
+                    })
+                    .on('blur', () => {
+                        let newName = $.trim($name.val()).replace(/\.+$/, '');
+                        if (newName.length !== 0) {
+                            me.name = newName + $name.data('extension');
+                        }
+                        me.$div.find('.name').css('width', 'auto').empty().text(me.name);
+                    })
+                )
+                ;
+            setTimeout(() => {
+                $name.select();
+                $name.focus();
+            }, 10);
+        }
     }
 
     function loadFile(file: File): void {
@@ -188,7 +248,7 @@ $(() => {
                 throw new Error('Unrecognized file type');
             }
             let fileReader = new FileReader();
-            fileReader.onload = function () {
+            fileReader.onload = function() {
                 try {
                     let arrayBuffer = this.result;
                     let translations = loader(arrayBuffer);
@@ -280,7 +340,7 @@ $(() => {
         e.preventDefault();
         let $dialog = $('<div />')
             .append($('<textarea class="translations-contents" />'))
-            .on('dialogresize', function () {
+            .on('dialogresize', () => {
                 $dialog.find('textarea').height($dialog.height() - 20);
             });
         let $textarea = $dialog.find('textarea');
@@ -289,13 +349,13 @@ $(() => {
             buttons: [
                 {
                     text: 'Cancel',
-                    click: function () {
+                    click: () => {
                         $dialog.dialog('close');
                     }
                 },
                 {
                     text: 'Parse',
-                    click: function () {
+                    click: () => {
                         let translations: GettextTS.Translations;
                         try {
                             translations = GettextEP.Extractor.Po.getTranslationsFromString($textarea.val());
@@ -312,7 +372,7 @@ $(() => {
             ],
             title: 'Paste a .po file contents',
             open: (): void => {
-                setTimeout(function () {
+                setTimeout(() => {
                     $dialog.trigger('dialogresize');
                 }, 10);
                 $textarea.focus();
