@@ -8,6 +8,7 @@ module.exports = {
         extensions: ['.ts', '.js', '.json'],
         alias: {
             'jquery-ui/draggable': __dirname + '/node_modules/jquery-ui/ui/widgets/draggable',
+            'jquery-ui/droppable': __dirname + '/node_modules/jquery-ui/ui/widgets/droppable',
             'jquery-ui/dialog': __dirname + '/node_modules/jquery-ui/ui/widgets/dialog',
         }
     },

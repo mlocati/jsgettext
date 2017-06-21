@@ -8,7 +8,6 @@ export namespace Gettext {
         private static _useNative: boolean;
         private static useNative(): boolean {
             if (Charset._useNative === undefined) {
-                debugger;
                 Charset._useNative = false;
                 if (window !== undefined) {
                     let w = <any>window;

@@ -73,12 +73,30 @@ body.busy {
     background-color: #777;
 }
 
-.translations-view {
+.base-view {
     z-index: 0;
+    &.current {
+        z-index: 1;
+    }
     display: inline-block;
-    position: absolute;
+    position: relative;
     .panel-heading {
+        padding: 5px 30px 5px 10px;
         cursor: move;
+        .base-view-name {
+            white-space: nowrap;
+            input[type="text"].form-control {
+                height: auto;
+                padding: 0px 6px;
+                margin-top: -1px;
+                margin-bottom: -1px;
+            }
+        }
+        .base-view-close {
+            margin-right: -25px;
+            float: right;
+            right: 0;
+        }
     }
     .panel-body {
         padding: 5px;
@@ -87,8 +105,34 @@ body.busy {
         }
     }
 }
-.translations-view.current {
-    z-index: 1;
+.operator-view {
+    .operator-dropzone {
+        min-width: 80px;
+        min-height: 38px;
+        border: 2px dashed #ddd;
+        float: left;
+        margin-left: 10px;
+        &:first-child {
+            margin-left: 0;
+        }
+        &.ui-droppable-hover {
+            border-color: #0087F7;
+        }
+    }
+    .panel-footer {
+        min-height: 54px;
+        .btn {
+            margin-left: 15px;
+        }
+    }
+}
+.translations-view-in-operator {
+    border: 1px solid @panel-primary-border;
+    background-color: @panel-primary-heading-bg;
+    border-radius: @panel-border-radius;
+    color: @panel-primary-text;
+    padding: 5px 10px;
+    cursor: move;
 }
 
 .ui-dialog textarea.translations-contents {

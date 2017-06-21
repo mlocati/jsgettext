@@ -274,6 +274,24 @@ export namespace Gettext {
         }
 
         /**
+         * Check if this set contains a translation ID.
+         *
+         * @param translationId
+         */
+        public hasTranslationId(translationId: string): boolean {
+            return this.list.has(translationId);
+        }
+
+        /**
+         * Remove a translation given its ID.
+         *
+         * @param translationId
+         */
+        public removeTranslationById(translationId: string): void {
+            this.list.remove(translationId);
+        }
+
+        /**
          * Get the list of translations.
          */
         public getTranslations(): GettextT.Translation[] {
