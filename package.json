@@ -30,7 +30,8 @@
     "less-plugin-clean-css": "^1.5.1",
     "ts-loader": "^2.1.0",
     "typescript": "^2.3.4",
-    "webpack": "^3.0.0"
+    "webpack": "^3.0.0",
+    "ajv":"^5.2.0"
   },
   "scripts": {
     "build-js": "webpack --colors --optimize-minimize",
