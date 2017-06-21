@@ -9,7 +9,7 @@ export namespace Gettext {
         private static useNative(): boolean {
             if (Charset._useNative === undefined) {
                 Charset._useNative = false;
-                if (window !== undefined) {
+                if (typeof window !== 'undefined') {
                     let w = <any>window;
                     if (w.TextDecoder && w.TextDecoder.prototype && w.TextEncoder && w.TextEncoder.prototype) {
                         Charset._useNative = true;
