@@ -2395,3 +2395,4 @@ body.busy #loader{display:block}
 .operator-view .panel-footer .btn{margin-left:15px}
 .translations-view-in-operator{border:1px solid #337ab7;background-color:#337ab7;border-radius:4px;color:#fff;padding:5px 10px;cursor:move}
 .ui-dialog textarea.translations-contents{width:100%;box-sizing:border-box;resize:none;padding:5px;white-space:pre;overflow:auto;font-family:Menlo,Monaco,Consolas,"Courier New",monospace}
+#github-link{display:block;width:300px;position:fixed;right:-100px;top:40px;z-index:1031;background-color:#a00;border:2px groove #c14f4f;text-align:center;color:#fff;-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg)}
