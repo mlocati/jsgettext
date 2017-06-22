@@ -292,7 +292,7 @@ $(() => {
         private readonly translationsView: TranslationsView;
         public readonly name: string;
         public readonly translations: GettextTS.Translations
-        private readonly $div: JQuery;
+        public readonly $div: JQuery;
         public constructor(translationsView: TranslationsView, $parent: JQuery) {
             this.name = translationsView.name;
             this.translationsView = translationsView;
@@ -348,8 +348,7 @@ $(() => {
                 )
                 .append($('<div class="panel-body drop-zones" />'))
                 .append($('<div class="panel-footer" />')
-                    .text(operator.description + ' ')
-                    .prepend($('<button class="btn btn-success pull-right">Process</button>')
+                    .append($('<button class="btn btn-success pull-right">Process</button>')
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
                             try {
@@ -358,6 +357,9 @@ $(() => {
                                 window.alert(e.message || e.toString());
                             }
                         })
+                    )
+                    .append($('<span style="white-space: pre-wrap" />')
+                        .text(operator.description)
                     )
                 )
                 ;
@@ -400,15 +402,18 @@ $(() => {
                     e.cancelBubble = true;
                     this.absolutizePosition();
                     let currentTranslationsViewInOperator = $dropZone.find('>.translations-view-in-operator').data('TranslationsViewInOperator');
-                    if (currentTranslationsViewInOperator instanceof TranslationsViewInOperator) {
-                        currentTranslationsViewInOperator.destroy();
-                    }
                     let tv = ui.draggable.data('TranslationsView');
                     if (tv instanceof TranslationsView) {
+                        if (currentTranslationsViewInOperator instanceof TranslationsViewInOperator) {
+                            currentTranslationsViewInOperator.destroy();
+                        }
                         new TranslationsViewInOperator(tv, $dropZone);
                     } else {
                         tv = ui.draggable.data('TranslationsViewInOperator');
                         if (tv instanceof TranslationsViewInOperator) {
+                            if (currentTranslationsViewInOperator instanceof TranslationsViewInOperator) {
+                                currentTranslationsViewInOperator.moveTo(tv.$div.parent());
+                            }
                             tv.moveTo($dropZone);
                         }
                     }
