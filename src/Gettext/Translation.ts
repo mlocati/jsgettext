@@ -224,6 +224,15 @@ export default class Translation {
         this.translations = translations.slice();
     }
 
+
+    /**
+     * Get the number of plurals (it will be 1 if the string is not plural).
+     *
+     */
+    public getPluralCount(): number {
+        return this.hasPlural ? this.translations.length : 1;
+    }
+
     /**
      * Increase or reduce the number of plurals of this translation (if it's a plural string).
      *

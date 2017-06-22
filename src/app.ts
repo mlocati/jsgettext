@@ -18,6 +18,7 @@ import SingleOperator from './Gettext/Operator/Single';
 import ToPotOperator from './Gettext/Operator/Single/ToPot';
 import ToPoOperator from './Gettext/Operator/Single/ToPo';
 import ChangeFuzzyOperator from './Gettext/Operator/Single/ChangeFuzzy';
+import CleanFuzzyOperator from './Gettext/Operator/Single/CleanFuzzy';
 
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
@@ -395,6 +396,7 @@ $(() => {
                 new ToPotOperator(),
                 new ToPoOperator(),
                 new ChangeFuzzyOperator(),
+                new CleanFuzzyOperator(),
             ].forEach((operator) => {
                 $operators.append($('<li />')
                     .tooltip({
@@ -436,12 +438,18 @@ $(() => {
             configureOperator(
                 operator,
                 (error?: Error): void => {
+                    if (error === undefined) {
+                        try {
+                            let translations = operator.apply(this.translations);
+                            let name = buildUniqueFilename(this.name, '', operator.outputFileExtension);
+                            new TranslationsView(name, translations);
+
+                        } catch (e) {
+                            error = e;
+                        }
+                    }
                     if (error !== undefined) {
                         onError(error);
-                    } else {
-                        let translations = operator.apply(this.translations);
-                        let name = buildUniqueFilename(this.name, '', operator.outputFileExtension);
-                        new TranslationsView(name, translations);
                     }
                 }
             );
