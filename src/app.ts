@@ -10,8 +10,13 @@ import { Gettext as GettextLI } from './Gettext/LocaleId';
 import { Gettext as GettextL } from './Gettext/Language';
 import { Gettext as GettextT } from './Gettext/Territory';
 import { Gettext as GettextP } from './Gettext/Plural';
+import { Gettext as GettextOAT } from './Gettext/Operator/ArgumentType';
 import { Gettext as GettextO } from './Gettext/Operator/Operator';
-import { Gettext as GettextO_SD } from './Gettext/Operator/SourceDiff';
+import { Gettext as GettextO_M } from './Gettext/Operator/Multiple';
+import { Gettext as GettextO_M_SD } from './Gettext/Operator/Multiple/SourceDiff';
+import { Gettext as GettextO_S } from './Gettext/Operator/Single';
+import { Gettext as GettextO_S_TPT } from './Gettext/Operator/Single/ToPot';
+import { Gettext as GettextO_S_TPO } from './Gettext/Operator/Single/ToPo';
 
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
@@ -70,6 +75,143 @@ $(() => {
         }
     }
 
+    function buildUniqueFilename(original: string, wantedBase: string, wantedExtension: string): string {
+        let originalBase = '';
+        let originalExtension = '';
+        if (original) {
+            let m = /^(.*)\.(\w+)$/.exec(original);
+            if (m === null) {
+                originalBase = original;
+            } else {
+                originalBase = m[1];
+                originalExtension = m[2];
+                originalExtension = originalExtension.toLowerCase();
+            }
+            originalBase = originalBase.replace(/^\s+|[\s\.]+$/g, '');
+            m = /^(.*\S)\s+\(\d+\)/.exec(originalBase);
+            if (m !== null) {
+                originalBase = m[1];
+            }
+        }
+        let base = wantedBase ? wantedBase : (originalBase ? originalBase : 'file');
+        let extension = wantedExtension ? wantedExtension : (originalExtension ? originalExtension : 'po');
+        let allNames: string[] = [];
+        TranslationsView.getAll().forEach((tv: TranslationsView) => {
+            allNames.push(tv.name.toLowerCase());
+        });
+        for (let i = 0; ; i++) {
+            let result = base;
+            if (i > 0) {
+                result += ' (' + i.toString() + ')';
+            }
+            if (extension) {
+                result += '.' + extension;
+            }
+            if (allNames.indexOf(result.toLowerCase()) < 0) {
+                return result;
+            }
+        }
+    }
+
+    function pickLocaleId(callback: (localeId: GettextLI.LocaleId) => boolean): void {
+        let $languages = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
+        GettextL.Language.getAll(true).forEach((l) => {
+            $languages.append($('<option />').val(l.id).text(l.name));
+
+        });
+        let $territories = $('<select class="form-control" />').append('<option value="" selected="selected">-- none --</option>');
+        GettextT.Territory.getAll().forEach((t) => {
+            $territories.append($('<option />').val(t.id).text(t.name));
+        });
+        let $div = $('<form />')
+            .append($('<div class="form-group" />')
+                .append('<label for="pick-language">Language</label>')
+                .append($languages)
+            )
+            .append($('<div class="form-group" />')
+                .append('<label for="pick-territory">Territory</label>')
+                .append($territories)
+            )
+            ;
+        $div.dialog({
+            title: 'Choose language',
+            modal: true,
+            resizable: false,
+            width: 400,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    click: () => {
+                        $div.dialog('close');
+                    }
+                },
+                {
+                    text: 'OK',
+                    click: () => {
+                        let languageId = $languages.val();
+                        if (!languageId) {
+                            $languages.focus();
+                            return;
+                        }
+                        let territoryId = $territories.val();
+                        let localeId = new GettextLI.LocaleId(languageId, '', territoryId);
+                        if (callback(localeId)) {
+                            $div.dialog('close');
+                        }
+                    }
+                }
+            ],
+            close: () => {
+                $div.remove();
+            }
+        });
+    }
+
+    function configureOperator(operator: GettextO.Operator.Operator, callback: (error?: Error) => void): void {
+        let values: { [id: string]: any } = {};
+        let keys = Object.keys(operator.configuration);
+        let keyIndex = 0;
+        function nextKey(): void {
+            if (keyIndex === keys.length) {
+                let error: Error | undefined = undefined;
+                try {
+                    operator.configure(values);
+                } catch (e) {
+                    error = e;
+                }
+                callback(error);
+                return;
+            }
+            let configurationKey = keys[keyIndex++];
+            switch (operator.configuration[configurationKey]) {
+                case GettextOAT.Operator.ArgumentType.Locale:
+                    pickLocaleId((localeId): boolean => {
+                        values[configurationKey] = localeId;
+                        nextKey();
+                        return true;
+                    });
+                    break;
+                case GettextOAT.Operator.ArgumentType.LocaleWithPossiblyPlurals:
+                    pickLocaleId((localeId): boolean => {
+                        let plural = GettextP.Plural.search(localeId);
+                        if (plural === null) {
+                            if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
+                                return false;
+                            }
+                        }
+                        values[configurationKey] = localeId;
+                        nextKey();
+                        return true;
+                    });
+                    break;
+                default:
+                    callback(new Error('Unknown configuration key type: ' + operator.configuration[configurationKey]))
+                    return;
+            }
+        }
+        nextKey();
+    }
+
     class TranslationsView extends BaseView {
         public name: string;
         public readonly translations: GettextTS.Translations;
@@ -79,6 +221,7 @@ $(() => {
             super($('<div class="translations-view panel panel-primary" />'));
             this.name = name;
             this.translations = translations;
+            let $operators: JQuery;
             this.$div
                 .data('TranslationsView', this)
                 .append($('<div class="panel-heading" />')
@@ -104,17 +247,9 @@ $(() => {
                             this.showContents();
                         })
                     )
-                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create language-specific .po"><i class="fa fa-arrow-right"></i>.po</button>')
-                        .on('click', (e: JQueryEventObject) => {
-                            e.preventDefault();
-                            this.toPo();
-                        })
-                    )
-                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Create empty .pot dictionary"><i class="fa fa-arrow-right"></i>.pot</button>')
-                        .on('click', (e: JQueryEventObject) => {
-                            e.preventDefault();
-                            this.toPot();
-                        })
+                    .append($('<div class="btn-group" />')
+                        .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-cog" title="Tools"></i> <span class="caret"></span></button>'))
+                        .append($operators = $('<ul class="dropdown-menu" />'))
                     )
                     .append($('<div class="btn-group" />')
                         .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-download" title="Download"></i> <span class="caret"></span></button>'))
@@ -142,7 +277,56 @@ $(() => {
                     this.positionBeforeDrag = this.$div.offset();
                 })
                 ;
+            [
+                new GettextO_S_TPT.Operator.Single.ToPot(),
+                new GettextO_S_TPO.Operator.Single.ToPo(),
+            ].forEach((operator) => {
+                $operators.append($('<li />')
+                    .tooltip({
+                        container: 'body',
+                        placement: 'right',
+                        title: operator.description,
+                    })
+                    .append($('<a href="#" />')
+                        .text(operator.name)
+                        .on('click', (e: JQueryEventObject) => {
+                            e.preventDefault();
+                            this.applyOperator(
+                                operator,
+                                (error) => {
+                                    window.alert(error.message || error.toString());
+                                }
+                            );
+                        })
+                    )
+                );
+            });
             this.setTooltip();
+        }
+        private applyOperator(operator: GettextO_S.Operator.Single, onError: (error: Error) => void) {
+            configureOperator(
+                operator,
+                (error?: Error): void => {
+                    if (error !== undefined) {
+                        onError(error);
+                    } else {
+                        let translations = operator.apply(this.translations);
+                        let name = buildUniqueFilename(this.name, '', operator.outputFileExtension);
+                        new TranslationsView(name, translations);
+                    }
+                }
+            );
+        }
+        public static getAll(): TranslationsView[] {
+            let result: TranslationsView[] = [];
+            $('.translations-view').each(function () {
+                let tv = $(arguments[1]).data('TranslationsView');
+                if (tv instanceof TranslationsView) {
+                    result.push(tv);
+                }
+            });
+
+            return result;
         }
         public hide(): void {
             this.$div.hide();
@@ -187,42 +371,6 @@ $(() => {
                     delete this.$contents;
                 },
             });
-        }
-        public toPo(): void {
-            pickLocaleId((localeId: GettextLI.LocaleId): boolean => {
-                let plural = GettextP.Plural.search(localeId);
-                if (plural === null) {
-                    if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
-                        return false;
-                    }
-                }
-                let translations = this.translations.clone();
-                ['Last-Translator'].forEach((cleanHeader) => {
-                    if (translations.getHeader(cleanHeader)) {
-                        translations.setHeader(cleanHeader, '');
-                    }
-                })
-                translations.setLanguage(localeId.toString(), true);
-                let match = /^(.+)\.\w+/.exec(this.name);
-                let name = (match === null ? this.name : match[1]) + '-' + localeId.toString() + '.po';
-                new TranslationsView(name, translations);
-                return true;
-            });
-        }
-        public toPot(): TranslationsView {
-            let name: string;
-            let match: RegExpExecArray | null;
-            if ((match = /^(.* )\((\d+\))\.pot/i.exec(this.name)) !== null) {
-                name = match[1] + '(' + (1 + parseInt(match[2], 10)).toString() + ').pot';
-            } else if ((match = /^(.*)\.pot/i.exec(this.name)) !== null) {
-                name = match[1] + ' (1).pot';
-            } else if ((match = /^(.*)\.\w+/i.exec(this.name)) !== null) {
-                name = match[1] + '.pot';
-            } else {
-                name = this.name + '.pot';
-            }
-            let pot = this.translations.toPot();
-            return new TranslationsView(name, pot);
         }
         public downloadAsPo(): void {
             let gp = new GettextGP.Generator.Po();
@@ -324,8 +472,8 @@ $(() => {
     }
 
     class OperatorView extends BaseView {
-        private operator: GettextO.Operator.Operator;
-        constructor(operator: GettextO.Operator.Operator) {
+        private operator: GettextO_M.Operator.Multiple;
+        constructor(operator: GettextO_M.Operator.Multiple) {
             super($('<div class="operator-view panel panel-info" />'));
             this.operator = operator;
             this.$div
@@ -351,11 +499,11 @@ $(() => {
                     .append($('<button class="btn btn-success pull-right">Process</button>')
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
-                            try {
-                                this.applyOperator();
-                            } catch (e) {
-                                window.alert(e.message || e.toString());
-                            }
+                            this.applyOperator(
+                                (error) => {
+                                    window.alert(error.message || error.toString());
+                                }
+                            );
                         })
                     )
                     .append($('<span style="white-space: pre-wrap" />')
@@ -421,31 +569,42 @@ $(() => {
                 })
                 ;
         }
-        private applyOperator(): void {
+        private applyOperator(onError: (error: Error) => void): void {
             let views = this.getArguments();
             if (views.length < this.operator.minNumberOfOperands) {
+                let error: Error;
                 if (this.operator.minNumberOfOperands === this.operator.maxNumberOfOperands) {
-                    throw new RangeError('Please specify ' + this.operator.minNumberOfOperands.toString() + ' files.');
+                    error = new RangeError('Please specify ' + this.operator.minNumberOfOperands.toString() + ' files.');
                 } else {
-                    throw new RangeError('Please specify at least ' + this.operator.minNumberOfOperands.toString() + ' files.');
+                    error = new RangeError('Please specify at least ' + this.operator.minNumberOfOperands.toString() + ' files.');
                 }
+                onError(error);
+                return;
             }
             if (this.operator.maxNumberOfOperands !== undefined && views.length > this.operator.maxNumberOfOperands) {
-                throw new RangeError('Please specify up to ' + this.operator.minNumberOfOperands.toString() + ' files.');
+                onError(new RangeError('Please specify up to ' + this.operator.minNumberOfOperands.toString() + ' files.'));
+                return;
             }
-            let name = 'result.po';
-            if (views.length > 0) {
-                let match = /^.(\.\w+)$/.exec(views[0].name);
-                if (match !== null) {
-                    name = 'result' + match[1];
+            configureOperator(
+                this.operator,
+                (error) => {
+                    if (error !== undefined) {
+                        onError(error);
+                        return;
+                    }
+                    let name = buildUniqueFilename(views.length === 0 ? 'result.po' : views[0].name, '', this.operator.outputFileExtension);
+                    let args: GettextTS.Translations[] = [];
+                    views.forEach((t) => {
+                        args.push(t.translations);
+                    });
+                    try {
+                        let result = this.operator.apply(args);
+                        new TranslationsView(name, result);
+                    } catch (e) {
+                        onError(e);
+                    }
                 }
-            }
-            let args: GettextTS.Translations[] = [];
-            views.forEach((t) => {
-                args.push(t.translations);
-            });
-            let result = this.operator.apply(args);
-            new TranslationsView(name, result);
+            );
         }
     }
 
@@ -476,59 +635,6 @@ $(() => {
         }
     }
 
-    function pickLocaleId(callback: (localeId: GettextLI.LocaleId) => boolean): void {
-        let $languages = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
-        GettextL.Language.getAll(true).forEach((l) => {
-            $languages.append($('<option />').val(l.id).text(l.name));
-
-        });
-        let $territories = $('<select class="form-control" />').append('<option value="" selected="selected">-- none --</option>');
-        GettextT.Territory.getAll().forEach((t) => {
-            $territories.append($('<option />').val(t.id).text(t.name));
-        });
-        let $div = $('<form />')
-            .append($('<div class="form-group" />')
-                .append('<label for="pick-language">Language</label>')
-                .append($languages)
-            )
-            .append($('<div class="form-group" />')
-                .append('<label for="pick-territory">Territory</label>')
-                .append($territories)
-            )
-            ;
-        $div.dialog({
-            title: 'Choose language details',
-            modal: true,
-            resizable: false,
-            width: 400,
-            buttons: [
-                {
-                    text: 'Cancel',
-                    click: () => {
-                        $div.dialog('close');
-                    }
-                },
-                {
-                    text: 'OK',
-                    click: () => {
-                        let languageId = $languages.val();
-                        if (!languageId) {
-                            $languages.focus();
-                            return;
-                        }
-                        let territoryId = $territories.val();
-                        let localeId = new GettextLI.LocaleId(languageId, '', territoryId);
-                        if (callback(localeId)) {
-                            $div.dialog('close');
-                        }
-                    }
-                }
-            ],
-            close: () => {
-                $div.remove();
-            }
-        });
-    }
 
     (() => {
         var $filePicker: JQuery;
@@ -601,8 +707,8 @@ $(() => {
     (() => {
         let $operators = $('#operators');
         [
-            new GettextO_SD.Operator.SourceDiff(),
-        ].forEach((operator: GettextO.Operator.Operator) => {
+            new GettextO_M_SD.Operator.Multiple.SourceDiff(),
+        ].forEach((operator: GettextO_M.Operator.Multiple) => {
             $operators.append($('<li />')
                 .tooltip({
                     container: 'body',

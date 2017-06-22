@@ -1,18 +1,9 @@
+import { Gettext as GettextO } from './Operator';
 import { Gettext as GettextTS } from '../Translations';
 
 export namespace Gettext {
     export namespace Operator {
-        export interface Operator {
-            /**
-             * Get the operator name
-             */
-            readonly name: string;
-
-            /**
-             * Get the operator description
-             */
-            readonly description: string;
-
+        export interface Multiple extends GettextO.Operator.Operator {
             /**
              * Get the minimum number of operands
              */
