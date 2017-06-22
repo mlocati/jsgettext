@@ -20,6 +20,7 @@ export default class Mo {
     private stringIndex: number;
     private charset: string;
     private constructor(data: DataView) {
+        debugger;
         this.data = data;
         this.littleEndian = true;
         this.offset = 0;
@@ -63,10 +64,15 @@ export default class Mo {
         this.offset = this.translationsTable[next + 1];
         let translated = this.getString(this.translationsTable[next]);
         this.stringIndex++;
-        if (original.length === 0) {
-            return translated;
+        switch (original.length) {
+            case 0:
+                return translated;
+            case 1:
+                if (original[0] === '\x04') {
+                    return translated;
+                }
+                break;
         }
-
         let chunks: string[];
         chunks = original.split('\x04', 2);
         let context: string;
