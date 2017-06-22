@@ -349,24 +349,24 @@ $(() => {
                     )
                 )
                 .append($('<div class="panel-body" />')
-                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="View .po"><i class="fa fa-eye"></i></button>')
+                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" data-placement="bottom" title="View .po"><i class="fa fa-eye"></i></button>')
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
                             this.showContents();
                         })
                     )
-                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Show info"><i class="fa fa-info-circle"></i></button>')
+                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" data-placement="bottom" title="Show info"><i class="fa fa-info-circle"></i></button>')
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
                             this.showInfo();
                         })
                     )
                     .append($('<div class="btn-group" />')
-                        .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-cog" title="Tools"></i> <span class="caret"></span></button>'))
+                        .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-cog" data-toggle="tooltip" data-placement="bottom" title="Tools"></i> <span class="caret"></span></button>'))
                         .append($operators = $('<ul class="dropdown-menu" />'))
                     )
                     .append($('<div class="btn-group" />')
-                        .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-download" title="Download"></i> <span class="caret"></span></button>'))
+                        .append($('<button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-download" data-toggle="tooltip" data-placement="bottom" title="Download"></i> <span class="caret"></span></button>'))
                         .append($('<ul class="dropdown-menu" />')
                             .append($('<li />')
                                 .append($('<a href="#">Download .' + (/\.pot/i.test(this.name) ? 'pot' : 'po') + '</a>')
