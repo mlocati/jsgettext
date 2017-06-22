@@ -1,5 +1,5 @@
 import _d from './data/language.json';
-let data = <{ [id: string]: string }> _d;
+let data = <{ [id: string]: string }>_d;
 
 export namespace Gettext {
     /**

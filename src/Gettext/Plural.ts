@@ -2,7 +2,7 @@ import { Gettext as GettextPC } from './PluralCase';
 import { Gettext as GettextLI } from './LocaleId';
 
 import _d from './data/plural.json';
-let data = <{ [id: string]: { formula: string, cases: number[], examples: Array<string | null> } }> _d;
+let data = <{ [id: string]: { formula: string, cases: number[], examples: Array<string | null> } }>_d;
 
 export namespace Gettext {
     /**

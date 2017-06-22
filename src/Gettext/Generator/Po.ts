@@ -45,7 +45,7 @@ export namespace Gettext {
                     if (translation.flags.length > 0) {
                         lines.push('#, ' + translation.flags.join(','));
                     }
-                    translation.previousUntranslatedStrings.forEach( (comment: string): void => {
+                    translation.previousUntranslatedStrings.forEach((comment: string): void => {
                         lines.push('#| ' + comment);
                     });
                     if (translation.context.length > 0) {
