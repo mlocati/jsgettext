@@ -97,7 +97,6 @@ export namespace Gettext {
                             throw new Error('The operation about the fuzzy flag is not configured');
                     }
                     let result = translations.clone();
-                    debugger;
                     result.getTranslations().map(operation);
                     return result;
                 }
