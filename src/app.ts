@@ -323,6 +323,7 @@ $(() => {
         public name: string;
         public readonly translations: GettextTS.Translations;
         private $contents: JQuery;
+        private $info: JQuery;
         private positionBeforeDrag: JQueryCoordinates;
         constructor(name: string, translations: GettextTS.Translations) {
             super($('<div class="translations-view panel panel-primary" />'));
@@ -352,6 +353,12 @@ $(() => {
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
                             this.showContents();
+                        })
+                    )
+                    .append($('<button class="btn btn-xs btn-info" data-toggle="tooltip" title="Show info"><i class="fa fa-info-circle"></i></button>')
+                        .on('click', (e: JQueryEventObject) => {
+                            e.preventDefault();
+                            this.showInfo();
                         })
                     )
                     .append($('<div class="btn-group" />')
@@ -415,6 +422,15 @@ $(() => {
                 );
             });
             this.setTooltip();
+        }
+        protected destroy(): void {
+            if (this.$contents !== undefined) {
+                this.$contents.dialog('close');
+            }
+            if (this.$info !== undefined) {
+                this.$info.dialog('close');
+            }
+            super.destroy();
         }
         private applyOperator(operator: GettextO_S.Operator.Single, onError: (error: Error) => void) {
             configureOperator(
@@ -482,6 +498,59 @@ $(() => {
                 close: (): void => {
                     this.$contents.remove();
                     delete this.$contents;
+                },
+            });
+        }
+        public showInfo(): void {
+            if (this.$info !== undefined) {
+                this.$info.dialog('moveToTop');
+                return;
+            }
+            let stats = this.translations.getStats();
+            let $partialsAfter: JQuery;
+            let maxWidth = 300;
+            let maxHeight = 128 + 7 * 37 + 1 * 3;
+            this.$info = $('<div />')
+                .append($('<table class="table table-bordered table-striped stats-table" />')
+                    .append($('<tbody />')
+                        .append($('<tr><th>Total number of strings</th><td class="text-right">' + stats.totalStrings.toLocaleString() + '</td></tr>'))
+                        .append($partialsAfter = $('<tr class="stats-section"><th>Translated strings</th><td class="text-right">' + stats.translated.toLocaleString() + '</td></tr>'))
+                        .append($('<tr><th>Untranslated strings</th><td class="text-right">' + stats.untranslated.toLocaleString() + '</td></tr>'))
+                        .append($('<tr class="stats-section"><th>Fuzzy strings</th><td class="text-right">' + stats.fuzzyTranslations.toLocaleString() + '</td></tr>'))
+                        .append($('<tr><th>Not fuzzy strings</th><td class="text-right">' + (stats.totalStrings - stats.fuzzyTranslations).toLocaleString() + '</td></tr>'))
+                        .append($('<tr class="stats-section"><th>Plural strings</th><td class="text-right">' + stats.pluralStrings.toLocaleString() + '</td></tr>'))
+                        .append($('<tr><th>Singular strings</th><td class="text-right">' + (stats.totalStrings - stats.pluralStrings).toLocaleString() + '</td></tr>'))
+                    )
+                )
+                ;
+            if (stats.partiallyTranslated > 0) {
+                $partialsAfter.after($('<tr><th>Partially translated strings</th><td class="text-right">' + stats.partiallyTranslated.toLocaleString() + '</td></tr>'))
+                maxHeight += 37;
+            }
+            $('#main').append(this.$info);
+            let width = Math.min(Math.max($(window).width() * .75, 200), maxWidth);
+            let height = Math.min(Math.max($(window).height() * .75, 200), maxHeight);
+            this.$info.dialog({
+                buttons: [
+                    {
+                        text: 'Close',
+                        click: () => {
+                            this.$info.dialog('close');
+                        }
+                    }
+                ],
+                title: 'Info about ' + this.name,
+                open: (): void => {
+                    setTimeout(() => {
+                        this.$info.trigger('dialogresize');
+                    }, 10);
+                },
+                width: width,
+                height: height,
+                resizable: width < maxWidth || height < maxHeight,
+                close: (): void => {
+                    this.$info.remove();
+                    delete this.$info;
                 },
             });
         }
@@ -758,19 +827,24 @@ $(() => {
         var $filePicker: JQuery;
         $('#upload-file').on('click', (e: JQueryEventObject) => {
             e.preventDefault();
-            if ($filePicker) {
-                $filePicker.remove();
-            }
-            $(document.body).append($filePicker = $('<input type="file" id="file-picker" multiple="multiple" />'));
-            $filePicker.on('change', () => {
-                var input = <HTMLInputElement>$filePicker[0];
-                if (input.files) {
-                    for (let i = 0; i < input.files.length; i++) {
-                        loadFile(input.files[i]);
+            setTimeout(
+                () => {
+                    if ($filePicker) {
+                        $filePicker.remove();
                     }
-                }
-            });
-            $filePicker.click();
+                    $(document.body).append($filePicker = $('<input type="file" id="file-picker" multiple="multiple" />'));
+                    $filePicker.on('change', () => {
+                        var input = <HTMLInputElement>$filePicker[0];
+                        if (input.files) {
+                            for (let i = 0; i < input.files.length; i++) {
+                                loadFile(input.files[i]);
+                            }
+                        }
+                    });
+                    $filePicker.click();
+                },
+                0
+            );
         });
     })();
     $('#paste-po').on('click', (e: JQueryEventObject) => {

@@ -122,7 +122,7 @@ export namespace Gettext {
          *
          * @param flag The flag to be removed
          */
-        public removeFlag(flag: string) : void {
+        public removeFlag(flag: string): void {
             let i = this.flags.indexOf(flag);
             if (i >= 0) {
                 this.flags.splice(i, 1);
@@ -241,25 +241,39 @@ export namespace Gettext {
                 this.translations = this.translations.slice(0, delta);
             }
         }
+
         /**
          * Is this translation fully translated?
          *
-         * @param pluralCount The number of plural forms (if not set, you'll get the currently defined translation count).
+         * @returns boolean
+         */
+        public isTranslated(): boolean {
+            if (this.hasPlural === true) {
+                return this.translations.indexOf('') < 0;
+            }
+            return this.translations[0].length > 0;
+        };
+
+
+        /**
+         * Is this translation only partially translated (meaningful only for plurals, where some string can be translated and some string can be untranslated)
          *
          * @returns boolean
          */
-        public isTranslated(pluralCount?: number): boolean {
+        public isPluralPartiallyTranslated(): boolean {
             if (this.hasPlural === false) {
-                return this.translations[0].length > 0;
-            }
-            if (pluralCount === undefined) {
-                return this.translations.indexOf('') < 0;
-            }
-            if (pluralCount > this.translations.length) {
                 return false;
             }
-            let i = this.translations.indexOf('');
-            return i < 0 || i >= pluralCount;
+            let firstUntranslated = this.translations.indexOf('');
+            if (firstUntranslated !== 0) {
+                return firstUntranslated > 0;
+            }
+            for (let i = 1; i < this.translations.length; i++) {
+                if (this.translations[i].length > 0) {
+                    return true;
+                }
+            }
+            return false;
         };
 
         /**
@@ -271,7 +285,15 @@ export namespace Gettext {
             this.references.forEach(function (reference) {
                 result.references.push({ filename: reference.filename, line: reference.line });
             });
-            Array.prototype.push.apply(result.flags, this.flags);
+            if (untranslated && this.flags.indexOf('fuzzy') >= 0) {
+                this.flags.forEach((flag) => {
+                    if (flag !== 'fuzzy') {
+                        result.flags.push(flag);
+                    }
+                })
+            } else {
+                Array.prototype.push.apply(result.flags, this.flags);
+            }
             Array.prototype.push.apply(result.previousUntranslatedStrings, this.previousUntranslatedStrings);
             if (untranslated) {
                 if (this.hasPlural || this.translations.length !== 2) {

@@ -1,5 +1,6 @@
 import { Gettext as GettextST } from './SortedDictionary';
 import { Gettext as GettextT } from './Translation';
+import { Gettext as GettextTSS } from './TranslationsStats';
 import { Gettext as GettextLI } from './LocaleId';
 import { Gettext as GettextP } from './Plural';
 
@@ -341,6 +342,13 @@ export namespace Gettext {
                 result.add(translation.getUntranslatedCopy());
             });
             return result;
+        }
+
+        /**
+         * Get some statistical data about these translations.
+         */
+        public getStats(): GettextTSS.TranslationsStats {
+            return new GettextTSS.TranslationsStats(this);
         }
     }
     Translations.defaultHeaders = new GettextST.SortedDictionary();

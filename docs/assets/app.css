@@ -2398,3 +2398,5 @@ body.busy #loader{display:block}
 .ui-dialog textarea.translations-contents{width:100%;box-sizing:border-box;resize:none;padding:5px;white-space:pre;overflow:auto;font-family:Menlo,Monaco,Consolas,"Courier New",monospace}
 #github-link{display:block;width:300px;position:fixed;right:-100px;top:40px;z-index:1031;background-color:#a00;border:2px groove #c14f4f;text-align:center;color:#fff;-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-o-transform:rotate(45deg);transform:rotate(45deg);opacity:.6;filter:alpha(opacity=60)}
 #github-link:hover{text-decoration:none;opacity:1;filter:alpha(opacity=100)}
+table.stats-table{margin-bottom:0}
+table.stats-table tbody tr.stats-section td,table.stats-table tbody tr.stats-section th{border-top-width:2px;border-top-color:#aaa}
