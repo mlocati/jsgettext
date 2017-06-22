@@ -12,7 +12,7 @@ export namespace Gettext {
             /**
              * @see Gettext.Operator.Operator.description
              */
-            public readonly description = 'Get the source strings present in a translations set but not in other translation sets';
+            public readonly description = 'Get the source strings present in a file but not in other files.';
 
             /**
              * @see Gettext.Operator.Operator.minNumberOfOperands
