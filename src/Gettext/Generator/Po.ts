@@ -11,7 +11,7 @@ export default class Po {
                 if (revertPreviousCharset) {
                     translations.setCharset('UTF-8');
                 }
-                headers = translations.getHeaders().join('\n');
+                headers = translations.getHeaders().join('\n').replace(/\n+$/, '');
                 if (revertPreviousCharset) {
                     translations.setCharset(previousCharset);
                     revertPreviousCharset = false;
@@ -27,7 +27,7 @@ export default class Po {
         if (headers.length > 0) {
             Array.prototype.push.apply(lines, translations.headerComments);
             lines.push('msgid ""');
-            lines.push('msgstr ' + Po.convertString(headers));
+            lines.push('msgstr ' + Po.convertString(headers + '\n'));
             lines.push('');
         }
         translations.getTranslations().forEach(function (translation: Translation): void {
