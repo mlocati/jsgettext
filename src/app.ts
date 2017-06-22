@@ -1,23 +1,23 @@
 ///<reference path="../node_modules/@types/jqueryui/index.d.ts" />
 
-import { Gettext as GettextTS } from './Gettext/Translations';
-import { Gettext as GettextEP } from './Gettext/Extractor/Po';
-import { Gettext as GettextEM } from './Gettext/Extractor/Mo';
-import { Gettext as GettextGP } from './Gettext/Generator/Po';
-import { Gettext as GettextGM } from './Gettext/Generator/Mo';
-import { Gettext as GettextC } from './Gettext/Charset';
-import { Gettext as GettextLI } from './Gettext/LocaleId';
-import { Gettext as GettextL } from './Gettext/Language';
-import { Gettext as GettextT } from './Gettext/Territory';
-import { Gettext as GettextP } from './Gettext/Plural';
-import { Gettext as GettextOAT } from './Gettext/Operator/ArgumentType';
-import { Gettext as GettextO } from './Gettext/Operator/Operator';
-import { Gettext as GettextO_M } from './Gettext/Operator/Multiple';
-import { Gettext as GettextO_M_SD } from './Gettext/Operator/Multiple/SourceDiff';
-import { Gettext as GettextO_S } from './Gettext/Operator/Single';
-import { Gettext as GettextO_S_TPT } from './Gettext/Operator/Single/ToPot';
-import { Gettext as GettextO_S_TPO } from './Gettext/Operator/Single/ToPo';
-import { Gettext as GettextO_S_FZY } from './Gettext/Operator/Single/ChangeFuzzy';
+import Translations from './Gettext/Translations';
+import PoExtractor from './Gettext/Extractor/Po';
+import MoExtractor from './Gettext/Extractor/Mo';
+import PoGenerator from './Gettext/Generator/Po';
+import MoGenerator from './Gettext/Generator/Mo';
+import Charset from './Gettext/Charset';
+import LocaleId from './Gettext/LocaleId';
+import Language from './Gettext/Language';
+import Territory from './Gettext/Territory';
+import Plural from './Gettext/Plural';
+import OperatorArgumentType from './Gettext/Operator/ArgumentType';
+import Operator from './Gettext/Operator/Operator';
+import MultipleOperator from './Gettext/Operator/Multiple';
+import SourceDiffOperator from './Gettext/Operator/Multiple/SourceDiff';
+import SingleOperator from './Gettext/Operator/Single';
+import ToPotOperator from './Gettext/Operator/Single/ToPot';
+import ToPoOperator from './Gettext/Operator/Single/ToPo';
+import ChangeFuzzyOperator from './Gettext/Operator/Single/ChangeFuzzy';
 
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
@@ -118,9 +118,9 @@ $(() => {
         }
     }
 
-    function pickLocaleId(callback: (localeId: GettextLI.LocaleId) => boolean): void {
+    function pickLocaleId(callback: (localeId: LocaleId) => boolean): void {
         let $languages = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
-        GettextL.Language.getAll(true).forEach((l) => {
+        Language.getAll(true).forEach((l) => {
             $languages.append($('<option />').val(l.id).text(l.name));
 
         });
@@ -128,8 +128,8 @@ $(() => {
         $languages.on('change', () => {
             let currentLanguage = $languages.val() || '';
             let currentTerritory = $territories.val() || '';
-            let all = GettextT.Territory.getAll();
-            let preferred = GettextT.Territory.getForLanguage(currentLanguage);
+            let all = Territory.getAll();
+            let preferred = Territory.getForLanguage(currentLanguage);
             $territories.empty().append('<option value="">-- none --</option>');
             if (preferred.length === 0 || preferred.length === all.length) {
                 all.forEach((t) => {
@@ -156,7 +156,7 @@ $(() => {
             }
             $territories.val(currentTerritory);
         }).trigger('change');
-        GettextT.Territory.getAll().forEach((t) => {
+        Territory.getAll().forEach((t) => {
             $territories.append($('<option />').val(t.id).text(t.name));
         });
         let $div = $('<form />')
@@ -191,7 +191,7 @@ $(() => {
                             return;
                         }
                         let territoryId = $territories.val();
-                        let localeId = new GettextLI.LocaleId(languageId, '', territoryId);
+                        let localeId = new LocaleId(languageId, '', territoryId);
                         if (callback(localeId)) {
                             $div.dialog('close');
                         }
@@ -267,7 +267,7 @@ $(() => {
         });
     }
 
-    function configureOperator(operator: GettextO.Operator.Operator, callback: (error?: Error) => void): void {
+    function configureOperator(operator: Operator, callback: (error?: Error) => void): void {
         let values: { [id: string]: any } = {};
         let keys = Object.keys(operator.configuration);
         let keyIndex = 0;
@@ -284,16 +284,16 @@ $(() => {
             }
             let configurationKey = keys[keyIndex++];
             switch (operator.configuration[configurationKey].type) {
-                case GettextOAT.Operator.ArgumentType.Locale:
+                case OperatorArgumentType.Locale:
                     pickLocaleId((localeId) => {
                         values[configurationKey] = localeId;
                         nextKey();
                         return true;
                     });
                     break;
-                case GettextOAT.Operator.ArgumentType.LocaleWithPossiblyPlurals:
+                case OperatorArgumentType.LocaleWithPossiblyPlurals:
                     pickLocaleId((localeId) => {
-                        let plural = GettextP.Plural.search(localeId);
+                        let plural = Plural.search(localeId);
                         if (plural === null) {
                             if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
                                 return false;
@@ -304,7 +304,7 @@ $(() => {
                         return true;
                     });
                     break;
-                case GettextOAT.Operator.ArgumentType.ValueFromList:
+                case OperatorArgumentType.ValueFromList:
                     pickListValue(operator.configuration[configurationKey].data, (value) => {
                         values[configurationKey] = value;
                         nextKey();
@@ -321,11 +321,11 @@ $(() => {
 
     class TranslationsView extends BaseView {
         public name: string;
-        public readonly translations: GettextTS.Translations;
+        public readonly translations: Translations;
         private $contents: JQuery;
         private $info: JQuery;
         private positionBeforeDrag: JQueryCoordinates;
-        constructor(name: string, translations: GettextTS.Translations) {
+        constructor(name: string, translations: Translations) {
             super($('<div class="translations-view panel panel-primary" />'));
             this.name = name;
             this.translations = translations;
@@ -392,9 +392,9 @@ $(() => {
                 })
                 ;
             [
-                new GettextO_S_TPT.Operator.Single.ToPot(),
-                new GettextO_S_TPO.Operator.Single.ToPo(),
-                new GettextO_S_FZY.Operator.Single.ChangeFuzzy(),
+                new ToPotOperator(),
+                new ToPoOperator(),
+                new ChangeFuzzyOperator(),
             ].forEach((operator) => {
                 $operators.append($('<li />')
                     .tooltip({
@@ -432,7 +432,7 @@ $(() => {
             }
             super.destroy();
         }
-        private applyOperator(operator: GettextO_S.Operator.Single, onError: (error: Error) => void) {
+        private applyOperator(operator: SingleOperator, onError: (error: Error) => void) {
             configureOperator(
                 operator,
                 (error?: Error): void => {
@@ -469,7 +469,7 @@ $(() => {
                 this.$contents.dialog('moveToTop');
                 return;
             }
-            let gp = new GettextGP.Generator.Po();
+            let gp = new PoGenerator();
             this.$contents = $('<div />')
                 .append($('<textarea class="translations-contents" readonly="readonly" />').val(gp.translationsToString(this.translations)))
                 .on('dialogresize', () => {
@@ -555,9 +555,9 @@ $(() => {
             });
         }
         public downloadAsPo(): void {
-            let gp = new GettextGP.Generator.Po();
+            let gp = new PoGenerator();
             let po = gp.translationsToString(this.translations, true);
-            let blob = GettextC.Charset.stringToUtf8Blob(po, 'text/x-po; charset=utf-8');
+            let blob = Charset.stringToUtf8Blob(po, 'text/x-po; charset=utf-8');
             let name = this.name;
             if (!/\.pot?/i.test(name)) {
                 let match = /^(.+)\.\w+/.exec(name);
@@ -566,7 +566,7 @@ $(() => {
             FileSaver.saveAs(blob, name, true);
         }
         public downloadAsMo(): void {
-            let gm = new GettextGM.Generator.Mo();
+            let gm = new MoGenerator();
             let mo = gm.translationsBytes(this.translations);
             let blob = new Blob([mo], { type: 'application/octet-stream' });
             let match = /^(.+)\.\w+$/.exec(this.name);
@@ -621,7 +621,7 @@ $(() => {
     class TranslationsViewInOperator {
         private readonly translationsView: TranslationsView;
         public readonly name: string;
-        public readonly translations: GettextTS.Translations
+        public readonly translations: Translations
         public readonly $div: JQuery;
         public constructor(translationsView: TranslationsView, $parent: JQuery) {
             this.name = translationsView.name;
@@ -654,8 +654,8 @@ $(() => {
     }
 
     class OperatorView extends BaseView {
-        private operator: GettextO_M.Operator.Multiple;
-        constructor(operator: GettextO_M.Operator.Multiple) {
+        private operator: MultipleOperator;
+        constructor(operator: MultipleOperator) {
             super($('<div class="operator-view panel panel-info" />'));
             this.operator = operator;
             this.$div
@@ -780,7 +780,7 @@ $(() => {
                         return;
                     }
                     let name = buildUniqueFilename(views.length === 0 ? 'result.po' : views[0].name, '', this.operator.outputFileExtension);
-                    let args: GettextTS.Translations[] = [];
+                    let args: Translations[] = [];
                     views.forEach((t) => {
                         args.push(t.translations);
                     });
@@ -798,11 +798,11 @@ $(() => {
     function loadFile(file: File): void {
         let name = file.name;
         try {
-            let loader: (arrayBuffer: ArrayBuffer) => GettextTS.Translations;
+            let loader: (arrayBuffer: ArrayBuffer) => Translations;
             if (/\.pot?$/i.test(name)) {
-                loader = GettextEP.Extractor.Po.getTranslationsFromBuffer;
+                loader = PoExtractor.getTranslationsFromBuffer;
             } else if (/\.mo$/i.test(name)) {
-                loader = GettextEM.Extractor.Mo.getTranslationsFromBuffer;
+                loader = MoExtractor.getTranslationsFromBuffer;
             } else {
                 throw new Error('Unrecognized file type');
             }
@@ -867,9 +867,9 @@ $(() => {
                 {
                     text: 'Parse',
                     click: () => {
-                        let translations: GettextTS.Translations;
+                        let translations: Translations;
                         try {
-                            translations = GettextEP.Extractor.Po.getTranslationsFromString($textarea.val());
+                            translations = PoExtractor.getTranslationsFromString($textarea.val());
                         }
                         catch (e) {
                             window.alert(e.message || e.toString());
@@ -899,8 +899,8 @@ $(() => {
     (() => {
         let $operators = $('#operators');
         [
-            new GettextO_M_SD.Operator.Multiple.SourceDiff(),
-        ].forEach((operator: GettextO_M.Operator.Multiple) => {
+            new SourceDiffOperator(),
+        ].forEach((operator: MultipleOperator) => {
             $operators.append($('<li />')
                 .tooltip({
                     container: 'body',

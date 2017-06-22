@@ -1,9 +1,7 @@
-export namespace Gettext {
-    export namespace Operator {
-        export enum ArgumentType {
-            Locale,
-            LocaleWithPossiblyPlurals,
-            ValueFromList
-        }
-    }
-}
+enum ArgumentType {
+    Locale,
+    LocaleWithPossiblyPlurals,
+    ValueFromList
+};
+
+export default ArgumentType;

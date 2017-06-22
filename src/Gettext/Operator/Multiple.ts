@@ -1,25 +1,23 @@
-import { Gettext as GettextO } from './Operator';
-import { Gettext as GettextTS } from '../Translations';
+import Operator from './Operator';
+import Translations from '../Translations';
 
-export namespace Gettext {
-    export namespace Operator {
-        export interface Multiple extends GettextO.Operator.Operator {
-            /**
-             * Get the minimum number of operands
-             */
-            readonly minNumberOfOperands: number;
+interface Multiple extends Operator {
+    /**
+     * Get the minimum number of operands
+     */
+    readonly minNumberOfOperands: number;
 
-            /**
-             * Get the maximum number of operands
-             */
-            readonly maxNumberOfOperands: number | undefined;
+    /**
+     * Get the maximum number of operands
+     */
+    readonly maxNumberOfOperands: number | undefined;
 
-            /**
-             * Apply the operator to the translations sets
-             *
-             * @throws Error
-             */
-            apply(translationsList: GettextTS.Translations[]): GettextTS.Translations;
-        }
-    }
+    /**
+     * Apply the operator to the translations sets
+     *
+     * @throws Error
+     */
+    apply(translationsList: Translations[]): Translations;
 }
+
+export default Multiple;
