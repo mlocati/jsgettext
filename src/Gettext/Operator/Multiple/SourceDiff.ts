@@ -60,7 +60,7 @@ export default class SourceDiff implements MultipleOperator {
             }
         });
         if (some === false) {
-            throw new Error('The first file does not contain translations that are not present in the other file(s)');
+            throw new Error('The first file does not contain source strings that are not present in the other file(s)');
         }
         return result;
     }
