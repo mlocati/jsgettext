@@ -30,6 +30,10 @@ import 'jquery-ui/dialog';
 import * as FileSaver from 'file-saver';
 $(() => {
 
+    $('[data-toggle="tooltip"]').tooltip({
+        container: 'body',
+    });
+
     abstract class BaseView {
         protected readonly $div: JQuery;
         constructor($div: JQuery) {
@@ -170,7 +174,6 @@ $(() => {
     }
 
     function pickListValue(values: any[], callback: (value: any) => boolean): void {
-        debugger;
         let $values = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
         values.forEach((value: any) => {
             let $option = $('<option />');
