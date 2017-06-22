@@ -10,6 +10,7 @@
 - create .po files with the corrected plural rules for the specified language (using the CLDR data)
 - calculate the source strings present in a file but not in other files
 - set/unset/toggle the `fuzzy` flag for all the translations
+- get some stats about a translations file (total number of strings, number of translated/untranslated strings, number of fuzzy/not-fuzzy strings, number of singular/plural strings)
 - ...and many more tools coming soon...
 
 ## Limitations
