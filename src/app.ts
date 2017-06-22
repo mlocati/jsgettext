@@ -124,7 +124,38 @@ $(() => {
             $languages.append($('<option />').val(l.id).text(l.name));
 
         });
-        let $territories = $('<select class="form-control" />').append('<option value="" selected="selected">-- none --</option>');
+        let $territories = $('<select class="form-control" />');
+        $languages.on('change', () => {
+            let currentLanguage = $languages.val() || '';
+            let currentTerritory = $territories.val() || '';
+            let all = GettextT.Territory.getAll();
+            let preferred = GettextT.Territory.getForLanguage(currentLanguage);
+            $territories.empty().append('<option value="">-- none --</option>');
+            if (preferred.length === 0 || preferred.length === all.length) {
+                all.forEach((t) => {
+                    $territories.append($('<option />').val(t.id).text(t.name));
+                });
+            } else {
+                let $group: JQuery;
+                $territories.append($group = $('<optgroup label="Suggested Territories" />'));
+                preferred.forEach((t) => {
+                    $territories.append($('<option />').val(t.id).text(t.name));
+                });
+                $territories.append($group = $('<optgroup label="Other Territories" />'));
+                all.forEach((t) => {
+                    let already = false;
+                    preferred.forEach((p) => {
+                        if (t.id === p.id) {
+                            already = true;
+                        }
+                    });
+                    if (already === false) {
+                        $territories.append($('<option />').val(t.id).text(t.name));
+                    }
+                });
+            }
+            $territories.val(currentTerritory);
+        }).trigger('change');
         GettextT.Territory.getAll().forEach((t) => {
             $territories.append($('<option />').val(t.id).text(t.name));
         });

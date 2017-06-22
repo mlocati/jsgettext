@@ -1,5 +1,7 @@
 import _d from './data/territory.json';
 let data = <{ [id: string]: string }>_d;
+import _d2 from './data/territories-for-language.json';
+let dataForLanguage = <{ [id: string]: string[] }>_d2;
 
 export namespace Gettext {
     /**
@@ -40,6 +42,33 @@ export namespace Gettext {
                 }
                 return 0;
             });
+            return result;
+        }
+
+        /**
+         * Get the territories where a language is spoken.
+         */
+        public static getForLanguage(languageId: string): { id: string, name: string }[] {
+            let result: { id: string, name: string }[] = [];
+            if (dataForLanguage.hasOwnProperty(languageId)) {
+                dataForLanguage[languageId].forEach((territoryId) => {
+                    let territoryName = Territory.getName(territoryId);
+                    if (territoryName.length !== 0) {
+                        result.push({ id: territoryId, name: territoryName });
+                    }
+                });
+                result.sort((a, b) => {
+                    let na = a.name.toLowerCase();
+                    let nb = b.name.toLowerCase();
+                    if (na < nb) {
+                        return -1;
+                    }
+                    if (na > nb) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            }
             return result;
         }
     }

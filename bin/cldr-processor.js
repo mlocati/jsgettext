@@ -10,7 +10,7 @@ function saveJson(name, data) {
         fs.mkdirSync(dirPath);
     }
     let jsonPath = path.resolve(dirPath, name) + '.json';
-    fs.writeFileSync(jsonPath, JSON.stringify({default: data}));
+    fs.writeFileSync(jsonPath, JSON.stringify({ default: data }));
 }
 
 function createLanguages() {
@@ -45,6 +45,38 @@ function createTerritories() {
     }
     saveJson('territory', list);
 }
+function createTerritoriesForLanguage() {
+    const THRESHOLD = 50;
+    let territories = require('./cldr/territoryInfo.json').supplemental.territoryInfo;
+    let list = {};
+    for (let territoryID in territories) {
+        let territoryInfo = territories[territoryID];
+        if (territoryInfo.hasOwnProperty('languagePopulation')) {
+            for (let languageID in territoryInfo.languagePopulation) {
+                if (languageID.indexOf('_') >= 0) {
+                    continue;
+                }
+                let languageInfo = territoryInfo.languagePopulation[languageID];
+                if (typeof languageInfo._officialStatus === 'undefined' || (languageInfo._officialStatus !== 'official' && languageInfo._officialStatus !== 'de_facto_official')) {
+                    continue;
+                }
+                if (typeof languageInfo._populationPercent === 'undefined') {
+                    continue;
+                }
+                let pp = parseFloat(languageInfo._populationPercent);
+                if (isNaN(pp) || pp < THRESHOLD) {
+                    continue;
+                }
+                if (!list.hasOwnProperty(languageID)) {
+                    list[languageID] = [];
+                }
+                list[languageID].push(territoryID);
+            }
+        }
+    }
+    saveJson('territories-for-language', list);
+}
+
 
 function createPlurals() {
     let plurals = require('./cldr/plurals.json');
@@ -86,5 +118,7 @@ console.log('Parsing scripts...');
 createScripts();
 console.log('Parsing territories...');
 createTerritories();
+console.log('Parsing territoryInfo...');
+createTerritoriesForLanguage();
 console.log('Parsing plurals...');
 createPlurals();
