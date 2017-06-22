@@ -25,8 +25,8 @@ export namespace Gettext {
                 /**
                  * @see Gettext.Operator.Operator.configuration
                  */
-                public readonly configuration: { [id: string]: GettextOAT.Operator.ArgumentType } = {
-                    locale: GettextOAT.Operator.ArgumentType.LocaleWithPossiblyPlurals,
+                public readonly configuration: {[id: string]: {type: GettextOAT.Operator.ArgumentType, data?: any}} = {
+                    locale: {type: GettextOAT.Operator.ArgumentType.LocaleWithPossiblyPlurals},
                 };
 
                 /**

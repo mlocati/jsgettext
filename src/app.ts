@@ -17,6 +17,7 @@ import { Gettext as GettextO_M_SD } from './Gettext/Operator/Multiple/SourceDiff
 import { Gettext as GettextO_S } from './Gettext/Operator/Single';
 import { Gettext as GettextO_S_TPT } from './Gettext/Operator/Single/ToPot';
 import { Gettext as GettextO_S_TPO } from './Gettext/Operator/Single/ToPo';
+import { Gettext as GettextO_S_FZY } from './Gettext/Operator/Single/ChangeFuzzy';
 
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
@@ -133,6 +134,7 @@ $(() => {
                 .append($territories)
             )
             ;
+        $(document.body).append($div);
         $div.dialog({
             title: 'Choose language',
             modal: true,
@@ -167,6 +169,70 @@ $(() => {
         });
     }
 
+    function pickListValue(values: any[], callback: (value: any) => boolean): void {
+        debugger;
+        let $values = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
+        values.forEach((value: any) => {
+            let $option = $('<option />');
+            if (value === undefined) {
+                $option.val('u').text('<undefined>');
+            } else if (value === null) {
+                $option.val('n').text('<null>');
+            } else {
+                $option.val('v').text(value.toString()).data('v', value);
+            }
+            $values.append($option);
+        });
+        let $div = $('<form />')
+            .append($('<div class="form-group" />')
+                .append('<label for="pick-language">Value</label>')
+                .append($values)
+            )
+            ;
+        $(document.body).append($div);
+        $div.dialog({
+            title: 'Choose a value',
+            modal: true,
+            resizable: false,
+            width: 400,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    click: () => {
+                        $div.dialog('close');
+                    }
+                },
+                {
+                    text: 'OK',
+                    click: () => {
+                        let result: any;
+                        let $option = $values.find(':selected');
+                        switch ($option.val()) {
+                            case 'u':
+                                result = undefined;
+                                break;
+                            case 'n':
+                                result = null;
+                                break;
+                            case 'v':
+                                result = $option.data('v');
+                                break;
+                            default:
+                                $values.focus();
+                                return;
+                        }
+                        if (callback(result)) {
+                            $div.dialog('close');
+                        }
+                    }
+                }
+            ],
+            close: () => {
+                $div.remove();
+            }
+        });
+    }
+
     function configureOperator(operator: GettextO.Operator.Operator, callback: (error?: Error) => void): void {
         let values: { [id: string]: any } = {};
         let keys = Object.keys(operator.configuration);
@@ -183,16 +249,16 @@ $(() => {
                 return;
             }
             let configurationKey = keys[keyIndex++];
-            switch (operator.configuration[configurationKey]) {
+            switch (operator.configuration[configurationKey].type) {
                 case GettextOAT.Operator.ArgumentType.Locale:
-                    pickLocaleId((localeId): boolean => {
+                    pickLocaleId((localeId) => {
                         values[configurationKey] = localeId;
                         nextKey();
                         return true;
                     });
                     break;
                 case GettextOAT.Operator.ArgumentType.LocaleWithPossiblyPlurals:
-                    pickLocaleId((localeId): boolean => {
+                    pickLocaleId((localeId) => {
                         let plural = GettextP.Plural.search(localeId);
                         if (plural === null) {
                             if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
@@ -200,6 +266,13 @@ $(() => {
                             }
                         }
                         values[configurationKey] = localeId;
+                        nextKey();
+                        return true;
+                    });
+                    break;
+                case GettextOAT.Operator.ArgumentType.ValueFromList:
+                    pickListValue(operator.configuration[configurationKey].data, (value) => {
+                        values[configurationKey] = value;
                         nextKey();
                         return true;
                     });
@@ -280,6 +353,7 @@ $(() => {
             [
                 new GettextO_S_TPT.Operator.Single.ToPot(),
                 new GettextO_S_TPO.Operator.Single.ToPo(),
+                new GettextO_S_FZY.Operator.Single.ChangeFuzzy(),
             ].forEach((operator) => {
                 $operators.append($('<li />')
                     .tooltip({
@@ -291,11 +365,16 @@ $(() => {
                         .text(operator.name)
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
-                            this.applyOperator(
-                                operator,
-                                (error) => {
-                                    window.alert(error.message || error.toString());
-                                }
+                            setTimeout(
+                                () => {
+                                    this.applyOperator(
+                                        operator,
+                                        (error) => {
+                                            window.alert(error.message || error.toString());
+                                        }
+                                    );
+                                },
+                                0
                             );
                         })
                     )
@@ -499,10 +578,15 @@ $(() => {
                     .append($('<button class="btn btn-success pull-right">Process</button>')
                         .on('click', (e: JQueryEventObject) => {
                             e.preventDefault();
-                            this.applyOperator(
-                                (error) => {
-                                    window.alert(error.message || error.toString());
-                                }
+                            setTimeout(
+                                () => {
+                                    this.applyOperator(
+                                        (error) => {
+                                            window.alert(error.message || error.toString());
+                                        }
+                                    );
+                                },
+                                0
                             );
                         })
                     )

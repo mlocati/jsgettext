@@ -109,11 +109,23 @@ export namespace Gettext {
         /**
          * Add a flag (if it's not already in the list).
          *
-         * @param flag The flag to be assed
+         * @param flag The flag to be added
          */
         public addFlag(flag: string): void {
             if (this.flags.indexOf(flag) < 0) {
                 this.flags.push(flag);
+            }
+        }
+
+        /**
+         * Remove a flag (if it's in the list).
+         *
+         * @param flag The flag to be removed
+         */
+        public removeFlag(flag: string) : void {
+            let i = this.flags.indexOf(flag);
+            if (i >= 0) {
+                this.flags.splice(i, 1);
             }
         }
 
@@ -224,7 +236,7 @@ export namespace Gettext {
             }
             let delta = pluralCount - this.translations.length;
             if (delta > 0) {
-                this.translations.concat(Array(delta).join('.').split('.'));
+                Array.prototype.push.apply(this.translations, Array(delta).join('.').split('.'));
             } else if (delta < 0) {
                 this.translations = this.translations.slice(0, delta);
             }
@@ -255,18 +267,18 @@ export namespace Gettext {
          */
         private createClone(untranslated: boolean): Translation {
             let result = new Translation(this.context, this.original, this.plural);
-            result.extractedComments.concat(this.extractedComments);
+            Array.prototype.push.apply(result.extractedComments, this.extractedComments);
             this.references.forEach(function (reference) {
                 result.references.push({ filename: reference.filename, line: reference.line });
             });
-            result.flags.concat(this.flags);
+            Array.prototype.push.apply(result.flags, this.flags);
             Array.prototype.push.apply(result.previousUntranslatedStrings, this.previousUntranslatedStrings);
             if (untranslated) {
                 if (this.hasPlural || this.translations.length !== 2) {
                     result.setTranslations(Array(this.translations.length).join('.').split('.'))
                 }
             } else {
-                result.translatorComments.concat(this.translatorComments);
+                Array.prototype.push.apply(result.translatorComments, this.translatorComments);
                 result.setTranslations(this.getTranslations());
             }
             return result;

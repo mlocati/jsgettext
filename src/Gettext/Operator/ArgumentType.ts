@@ -3,6 +3,7 @@ export namespace Gettext {
         export enum ArgumentType {
             Locale,
             LocaleWithPossiblyPlurals,
+            ValueFromList
         }
     }
 }

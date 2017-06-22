@@ -24,7 +24,7 @@ export namespace Gettext {
                 /**
                  * @see Gettext.Operator.Operator.configuration
                  */
-                public readonly configuration: { [id: string]: GettextOAT.Operator.ArgumentType } = {};
+                public readonly configuration: {[id: string]: {type: GettextOAT.Operator.ArgumentType, data?: any}} = {};
 
                 /**
                  * @see Gettext.Operator.Operator.configure
