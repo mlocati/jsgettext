@@ -50,7 +50,12 @@ export default class Mo {
         let translationsIndex: { relativeOffset: number, length: number }[] = [];
         translationIds.forEach((messageId: string): void => {
             let translation: Translation = messages.get(messageId);
-            let originalString = messageId;
+            let originalString: string;
+            if (translation.context.length !== 0) {
+                originalString = translation.context + '\x04' + translation.original;
+            } else {
+                originalString = translation.original;
+            }
             if (translation.hasPlural) {
                 originalString += '\x00' + translation.plural;
             }
