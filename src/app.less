@@ -158,7 +158,8 @@ body.busy {
     color: #fff;
     .rotate(45deg);
     .opacity(0.6);
-    &:hover {
+    &:hover, &:focus {
+        outline: none;
         text-decoration: none;
         .opacity(1);
     }
