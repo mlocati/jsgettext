@@ -35,6 +35,26 @@ export default class TranslationsStats {
     public readonly fuzzyTranslations: number;
 
     /**
+     * The charset (empty string if unavailable).
+     */
+    public readonly charset: string;
+
+    /**
+     * The language identifier (empty string if unavailable).
+     */
+    public readonly language: string;
+
+    /**
+     * The number of plural cases (null if unavailable).
+     */
+    public readonly numPlurals: number | null;
+
+    /**
+     * The formula used to determine the plural case (empty string if unavailable).
+     */
+    public readonly pluralsFormula: string;
+
+    /**
      * Initialize the instance.
      *
      * @param translations
@@ -67,5 +87,15 @@ export default class TranslationsStats {
         this.untranslated = untranslated;
         this.partiallyTranslated = partiallyTranslated;
         this.fuzzyTranslations = fuzzyTranslations;
+        this.charset = translations.getCharset(false);
+        this.language = translations.getLanguage();
+        let pluralForms = translations.getPluralForms();
+        if (pluralForms === null) {
+            this.numPlurals = null;
+            this.pluralsFormula = '';
+        } else {
+            this.numPlurals = pluralForms.numPlurals;
+            this.pluralsFormula = pluralForms.pluralFormula;
+        }
     }
 }

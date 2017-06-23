@@ -25,6 +25,7 @@ import * as $ from 'jquery';
 import 'bootstrap/js/tooltip.js';
 import 'bootstrap/js/collapse.js';
 import 'bootstrap/js/dropdown.js';
+import 'bootstrap/js/tab.js';
 import 'jquery-ui/draggable';
 import 'jquery-ui/droppable';
 import 'jquery-ui/dialog';
@@ -511,29 +512,77 @@ $(() => {
                 return;
             }
             let stats = this.translations.getStats();
-            let $partialsAfter: JQuery;
-            let maxWidth = 300;
-            let maxHeight = 128 + 7 * 37 + 1 * 3;
+            let $headers : JQuery;
+            let id = (new Date()).getTime().toString() + '_' + Math.round(Math.random() * 1000).toString();
             this.$info = $('<div />')
-                .append($('<table class="table table-bordered table-striped stats-table" />')
-                    .append($('<tbody />')
-                        .append($('<tr><th>Total number of strings</th><td class="text-right">' + stats.totalStrings.toLocaleString() + '</td></tr>'))
-                        .append($partialsAfter = $('<tr class="stats-section"><th>Translated strings</th><td class="text-right">' + stats.translated.toLocaleString() + '</td></tr>'))
-                        .append($('<tr><th>Untranslated strings</th><td class="text-right">' + stats.untranslated.toLocaleString() + '</td></tr>'))
-                        .append($('<tr class="stats-section"><th>Fuzzy strings</th><td class="text-right">' + stats.fuzzyTranslations.toLocaleString() + '</td></tr>'))
-                        .append($('<tr><th>Not fuzzy strings</th><td class="text-right">' + (stats.totalStrings - stats.fuzzyTranslations).toLocaleString() + '</td></tr>'))
-                        .append($('<tr class="stats-section"><th>Plural strings</th><td class="text-right">' + stats.pluralStrings.toLocaleString() + '</td></tr>'))
-                        .append($('<tr><th>Singular strings</th><td class="text-right">' + (stats.totalStrings - stats.pluralStrings).toLocaleString() + '</td></tr>'))
+                .append($('<ul class="nav nav-tabs" role="tablist" />')
+                    .append($('<li role="presentation" class="active"><a href="#stats-tab-totals_' + id + '" aria-controls="home" role="tab" data-toggle="tab">Totals</a></li>'))
+                    .append($('<li role="presentation"><a href="#stats-tab-localization_' + id + '" aria-controls="profile" role="tab" data-toggle="tab">Localization</a></li>'))
+                    .append($('<li role="presentation"><a href="#stats-tab-headers_' + id + '" aria-controls="settings" role="tab" data-toggle="tab">Headers</a></li>'))
+                )
+                .append($('<div class="tab-content" />')
+                    .append($('<div role="tabpanel" class="tab-pane active" id="stats-tab-totals_' + id + '" />')
+                        .append($('<table class="table table-bordered table-striped stats-table" />')
+                            .append($('<tbody />')
+                                .append($('<tr><th>Total number of strings</th><td class="text-right">' + stats.totalStrings.toLocaleString() + '</td></tr>'))
+                                .append($('<tr class="stats-section"><th>Translated strings</th><td class="text-right">' + stats.translated.toLocaleString() + '</td></tr>'))
+                                .append($('<tr><th>Partially translated plural strings</th><td class="text-right">' + stats.partiallyTranslated.toLocaleString() + '</td></tr>'))
+                                .append($('<tr><th>Untranslated strings</th><td class="text-right">' + stats.untranslated.toLocaleString() + '</td></tr>'))
+                                .append($('<tr class="stats-section"><th>Fuzzy strings</th><td class="text-right">' + stats.fuzzyTranslations.toLocaleString() + '</td></tr>'))
+                                .append($('<tr><th>Not fuzzy strings</th><td class="text-right">' + (stats.totalStrings - stats.fuzzyTranslations).toLocaleString() + '</td></tr>'))
+                                .append($('<tr class="stats-section"><th>Plural strings</th><td class="text-right">' + stats.pluralStrings.toLocaleString() + '</td></tr>'))
+                                .append($('<tr><th>Singular strings</th><td class="text-right">' + (stats.totalStrings - stats.pluralStrings).toLocaleString() + '</td></tr>'))
+                            )
+                        )
                     )
+                    .append($('<div role="tabpanel" class="tab-pane" id="stats-tab-localization_' + id + '" />')
+                        .append($('<table class="table table-bordered table-striped stats-table" />')
+                            .append($('<tbody />')
+                                .append($('<tr><th>Character set</th>')
+                                    .append($('<td />')
+                                        .append(
+                                            stats.charset ?
+                                            $('<span />').text(stats.charset) :
+                                            '<i>unavailable</i>'
+                                        )
+                                    )
+                                )
+                                .append($('<tr><th>Language</th>')
+                                    .append($('<td />')
+                                        .append(
+                                            stats.language ?
+                                            $('<span />').text(stats.language) :
+                                            '<i>unavailable</i>'
+                                        )
+                                    )
+                                )
+                                .append($('<tr><th>Plural cases</th>' + (stats.numPlurals === null ? '<td><i>unavailable</i></td>' : '<td>' + stats.numPlurals.toLocaleString() + '</td>') + '</tr>'))
+                                .append($('<tr><th>Plural formula</th>')
+                                    .append($('<td />').text(stats.pluralsFormula))
+                                )
+                            )
+                        )
+                    )
+                    .append($headers = $('<div role="tabpanel" class="tab-pane" id="stats-tab-headers_' + id + '" />'))
                 )
                 ;
-            if (stats.partiallyTranslated > 0) {
-                $partialsAfter.after($('<tr><th>Partially translated strings</th><td class="text-right">' + stats.partiallyTranslated.toLocaleString() + '</td></tr>'))
-                maxHeight += 37;
+            let headers = this.translations.getHeadersDictionary();
+            if (headers.length === 0) {
+                $headers.html('<div>No header found</div>');
+            } else {
+                let $tbody: JQuery;
+                $headers.append($('<table class="table table-bordered table-striped stats-table" />')
+                    .append($tbody = $('<tbody />'))
+                );
+                headers.forEach((h) => {
+                    $tbody.append($('<tr />')
+                        .append($('<th />').text(h.key))
+                        .append($('<td />').text(h.value))
+                    );
+                })
             }
+            $(this.$info.find('[data-toggle="tab"]').get().reverse()).tab('show');
             $('#main').append(this.$info);
-            let width = Math.min(Math.max($(window).width() * .75, 200), maxWidth);
-            let height = Math.min(Math.max($(window).height() * .75, 200), maxHeight);
             this.$info.dialog({
                 buttons: [
                     {
@@ -544,14 +593,11 @@ $(() => {
                     }
                 ],
                 title: 'Info about ' + this.name,
-                open: (): void => {
-                    setTimeout(() => {
-                        this.$info.trigger('dialogresize');
-                    }, 10);
+                open: () => {
+                    this.$info.closest('.ui-dialog').find('.ui-dialog-buttonset button').focus();
                 },
-                width: width,
-                height: height,
-                resizable: width < maxWidth || height < maxHeight,
+                width: Math.min(Math.max($(window).width() * .75, 200), 500),
+                height: Math.min(Math.max($(window).height() * .75, 200), 580),
                 close: (): void => {
                     this.$info.remove();
                     delete this.$info;
@@ -812,7 +858,6 @@ $(() => {
             }
             let fileReader = new FileReader();
             fileReader.onload = function () {
-                debugger;
                 try {
                     let arrayBuffer = this.result;
                     let translations: Translations | undefined = undefined;

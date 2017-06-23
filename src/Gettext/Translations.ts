@@ -99,7 +99,7 @@ export default class Translations {
     }
 
     /**
-     * Get all the headers.
+     * Get all the headers (as a string list)
      */
     public getHeaders(): string[] {
         let result: string[] = [];
@@ -107,6 +107,13 @@ export default class Translations {
             result.push(element.key + ': ' + element.value);
         });
         return result;
+    }
+
+    /**
+     * Get all the headers (as a dictionary).
+     */
+    public getHeadersDictionary(): { key: string, value: string }[] {
+        return this.headers.all();
     }
 
     /**
