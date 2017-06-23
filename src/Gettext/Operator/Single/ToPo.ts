@@ -22,8 +22,11 @@ export default class ToPo implements SingleOperator {
     /**
      * @see Gettext.Operator.Operator.configuration
      */
-    public readonly configuration: { [id: string]: { type: ArgumentType, data?: any } } = {
-        locale: { type: ArgumentType.LocaleWithPossiblyPlurals },
+    public readonly configuration: { [id: string]: { name: string, type: ArgumentType, data?: any } } = {
+        locale: {
+            name: 'Locale of the new PO file',
+            type: ArgumentType.LocaleWithPossiblyPlurals
+        },
     };
 
     /**

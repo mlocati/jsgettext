@@ -19,7 +19,7 @@ interface Operator {
     /**
      * Get the operator configuration options.
      */
-    readonly configuration: {[id: string]: {type: ArgumentType, data?: any}}
+    readonly configuration: {[id: string]: {name: string, type: ArgumentType, data?: any}}
 
     /**
      * Configure the operator

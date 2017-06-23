@@ -17,8 +17,7 @@ import SourceDiffOperator from './Gettext/Operator/Multiple/SourceDiff';
 import SingleOperator from './Gettext/Operator/Single';
 import ToPotOperator from './Gettext/Operator/Single/ToPot';
 import ToPoOperator from './Gettext/Operator/Single/ToPo';
-import ChangeFuzzyOperator from './Gettext/Operator/Single/ChangeFuzzy';
-import CleanFuzzyOperator from './Gettext/Operator/Single/CleanFuzzy';
+import FuzzyOperator from './Gettext/Operator/Single/Fuzzy';
 
 import * as $ from 'jquery';
 (<any>window).jQuery = $;
@@ -119,7 +118,7 @@ $(() => {
         }
     }
 
-    function pickLocaleId(callback: (localeId: LocaleId) => boolean): void {
+    function pickLocaleId(callback: (localeId: LocaleId) => boolean, title?: string): void {
         let $languages = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
         Language.getAll(true).forEach((l) => {
             $languages.append($('<option />').val(l.id).text(l.name));
@@ -162,17 +161,17 @@ $(() => {
         });
         let $div = $('<form />')
             .append($('<div class="form-group" />')
-                .append('<label for="pick-language">Language</label>')
+                .append('<label>Language</label>')
                 .append($languages)
             )
             .append($('<div class="form-group" />')
-                .append('<label for="pick-territory">Territory</label>')
+                .append('<label>Territory</label>')
                 .append($territories)
             )
             ;
         $(document.body).append($div);
         $div.dialog({
-            title: 'Choose language',
+            title: title || 'Choose language',
             modal: true,
             resizable: false,
             width: 400,
@@ -205,28 +204,33 @@ $(() => {
         });
     }
 
-    function pickListValue(values: any[], callback: (value: any) => boolean): void {
-        let $values = $('<select class="form-control" />').append('<option value="" selected="selected">Please select</option>');
-        values.forEach((value: any) => {
-            let $option = $('<option />');
+    function pickListValue(values: any[], callback: (value: any) => boolean, title?: string): void {
+        let $list = $('<ul class="list-unstyled" />')
+        let $div = $('<div />').append($list);
+        values.forEach((value, index) => {
+            let $button = $('<button class="btn btn-primary" style="width: 100%" />')
+                .on('click', (e: JQueryEventObject) => {
+                    e.preventDefault();
+                    if (callback(value)) {
+                        $div.dialog('close');
+                    }
+                });
             if (value === undefined) {
-                $option.val('u').text('<undefined>');
+                $button.text('<undefined>');
             } else if (value === null) {
-                $option.val('n').text('<null>');
+                $button.text('<null>');
             } else {
-                $option.val('v').text(value.toString()).data('v', value);
+                $button.text(value.toString());
             }
-            $values.append($option);
+            let $li = $('<li />').append($button);
+            if (index > 0) {
+                $li.css('margin-top', '5px');
+            }
+            $list.append($li);
         });
-        let $div = $('<form />')
-            .append($('<div class="form-group" />')
-                .append('<label for="pick-language">Value</label>')
-                .append($values)
-            )
-            ;
         $(document.body).append($div);
         $div.dialog({
-            title: 'Choose a value',
+            title: title || 'Choose a value',
             modal: true,
             resizable: false,
             width: 400,
@@ -236,32 +240,11 @@ $(() => {
                     click: () => {
                         $div.dialog('close');
                     }
-                },
-                {
-                    text: 'OK',
-                    click: () => {
-                        let result: any;
-                        let $option = $values.find(':selected');
-                        switch ($option.val()) {
-                            case 'u':
-                                result = undefined;
-                                break;
-                            case 'n':
-                                result = null;
-                                break;
-                            case 'v':
-                                result = $option.data('v');
-                                break;
-                            default:
-                                $values.focus();
-                                return;
-                        }
-                        if (callback(result)) {
-                            $div.dialog('close');
-                        }
-                    }
                 }
             ],
+            open: () => {
+                $div.closest('.ui-dialog').find('.ui-dialog-buttonset button').focus();
+            },
             close: () => {
                 $div.remove();
             }
@@ -274,43 +257,58 @@ $(() => {
         let keyIndex = 0;
         function nextKey(): void {
             if (keyIndex === keys.length) {
-                let error: Error | undefined = undefined;
-                try {
-                    operator.configure(values);
-                } catch (e) {
-                    error = e;
-                }
-                callback(error);
+                setTimeout(
+                    () => {
+                        let error: Error | undefined = undefined;
+                        try {
+                            operator.configure(values);
+                        } catch (e) {
+                            error = e;
+                        }
+                        callback(error);
+                    },
+                    0
+                );
                 return;
             }
             let configurationKey = keys[keyIndex++];
             switch (operator.configuration[configurationKey].type) {
                 case OperatorArgumentType.Locale:
-                    pickLocaleId((localeId) => {
-                        values[configurationKey] = localeId;
-                        nextKey();
-                        return true;
-                    });
+                    pickLocaleId(
+                        (localeId) => {
+                            values[configurationKey] = localeId;
+                            nextKey();
+                            return true;
+                        },
+                        operator.configuration[configurationKey].name
+                    );
                     break;
                 case OperatorArgumentType.LocaleWithPossiblyPlurals:
-                    pickLocaleId((localeId) => {
-                        let plural = Plural.search(localeId);
-                        if (plural === null) {
-                            if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
-                                return false;
+                    pickLocaleId(
+                        (localeId) => {
+                            let plural = Plural.search(localeId);
+                            if (plural === null) {
+                                if (window.confirm('Unable to find the plural rules for ' + localeId.getName() + '.\nProceed anyway?') === false) {
+                                    return false;
+                                }
                             }
-                        }
-                        values[configurationKey] = localeId;
-                        nextKey();
-                        return true;
-                    });
+                            values[configurationKey] = localeId;
+                            nextKey();
+                            return true;
+                        },
+                        operator.configuration[configurationKey].name
+                    );
                     break;
                 case OperatorArgumentType.ValueFromList:
-                    pickListValue(operator.configuration[configurationKey].data, (value) => {
-                        values[configurationKey] = value;
-                        nextKey();
-                        return true;
-                    });
+                    pickListValue(
+                        operator.configuration[configurationKey].data,
+                        (value) => {
+                            values[configurationKey] = value;
+                            nextKey();
+                            return true;
+                        },
+                        operator.configuration[configurationKey].name
+                    );
                     break;
                 default:
                     callback(new Error('Unknown configuration key type: ' + operator.configuration[configurationKey]))
@@ -395,8 +393,7 @@ $(() => {
             [
                 new ToPotOperator(),
                 new ToPoOperator(),
-                new ChangeFuzzyOperator(),
-                new CleanFuzzyOperator(),
+                new FuzzyOperator(),
             ].forEach((operator) => {
                 $operators.append($('<li />')
                     .tooltip({
@@ -438,18 +435,16 @@ $(() => {
             configureOperator(
                 operator,
                 (error?: Error): void => {
-                    if (error === undefined) {
-                        try {
-                            let translations = operator.apply(this.translations);
-                            let name = buildUniqueFilename(this.name, '', operator.outputFileExtension);
-                            new TranslationsView(name, translations);
-
-                        } catch (e) {
-                            error = e;
-                        }
-                    }
                     if (error !== undefined) {
                         onError(error);
+                        return;
+                    }
+                    try {
+                        let translations = operator.apply(this.translations);
+                        let name = buildUniqueFilename(this.name, '', operator.outputFileExtension);
+                        new TranslationsView(name, translations);
+                    } catch (e) {
+                        onError(e);
                     }
                 }
             );

@@ -21,7 +21,7 @@ export default class SourceDiff implements MultipleOperator {
     /**
      * @see Gettext.Operator.Operator.configuration
      */
-    public readonly configuration: { [id: string]: { type: ArgumentType, data?: any } } = {};
+    public readonly configuration: { [id: string]: { name: string, type: ArgumentType, data?: any } } = {};
 
     /**
      * @see Gettext.Operator.Operator.configure
