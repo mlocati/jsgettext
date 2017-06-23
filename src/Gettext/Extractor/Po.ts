@@ -1,5 +1,6 @@
 import Translation from '../Translation';
 import Translations from '../Translations';
+import PartialLoadError from './PartialLoadError';
 import Charset from '../Charset';
 
 /**
@@ -217,26 +218,35 @@ export default class Po {
         let po = new Po(string);
         let translations = Translations.createEmpty();
         let translation: Translation | { comments: string[], headers: string } | null;
-        while ((translation = po.getNextTranslation()) !== null) {
-            if (translation instanceof Translation) {
-                translations.add(translation);
-            } else {
-                Array.prototype.push.apply(translations.headerComments, translation.comments);
-                translation.headers.split('\n').forEach(function (header: string) {
-                    header = header.replace(/^\s+|\s+$/g, '');
-                    if (header.length === 0) {
-                        return;
-                    }
-                    let colonIndex = header.indexOf(':');
-                    if (colonIndex > 0) {
-                        let headerName = header.substr(0, colonIndex).replace(/\s+$/, '');
-                        let headerValue = header.length === colonIndex + 1 ? '' : header.substr(colonIndex + 1).replace(/^\s+/, '');
-                        translations.setHeader(headerName, headerValue);
-                    } else {
-                        translations.setHeader(header, '');
-                    }
-                });
+        let numLoadedStrings = 0;
+        try {
+            while ((translation = po.getNextTranslation()) !== null) {
+                if (translation instanceof Translation) {
+                    translations.add(translation);
+                    numLoadedStrings++;
+                } else {
+                    Array.prototype.push.apply(translations.headerComments, translation.comments);
+                    translation.headers.split('\n').forEach(function (header: string) {
+                        header = header.replace(/^\s+|\s+$/g, '');
+                        if (header.length === 0) {
+                            return;
+                        }
+                        let colonIndex = header.indexOf(':');
+                        if (colonIndex > 0) {
+                            let headerName = header.substr(0, colonIndex).replace(/\s+$/, '');
+                            let headerValue = header.length === colonIndex + 1 ? '' : header.substr(colonIndex + 1).replace(/^\s+/, '');
+                            translations.setHeader(headerName, headerValue);
+                        } else {
+                            translations.setHeader(header, '');
+                        }
+                    });
+                }
             }
+        } catch (e) {
+            if (numLoadedStrings === 0) {
+                throw e;
+            }
+            throw new PartialLoadError(e.message || e.toString(), null, numLoadedStrings, translations);
         }
         return translations;
     }

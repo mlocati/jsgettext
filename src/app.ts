@@ -1,6 +1,7 @@
 ///<reference path="../node_modules/@types/jqueryui/index.d.ts" />
 
 import Translations from './Gettext/Translations';
+import ExtractorPartialError from './Gettext/Extractor/PartialLoadError';
 import PoExtractor from './Gettext/Extractor/Po';
 import MoExtractor from './Gettext/Extractor/Mo';
 import PoGenerator from './Gettext/Generator/Po';
@@ -811,10 +812,24 @@ $(() => {
             }
             let fileReader = new FileReader();
             fileReader.onload = function () {
+                debugger;
                 try {
                     let arrayBuffer = this.result;
-                    let translations = loader(arrayBuffer);
-                    new TranslationsView(name, translations);
+                    let translations: Translations | undefined = undefined;
+                    try {
+                        translations = loader(arrayBuffer);
+                    } catch (e) {
+                        if (e instanceof ExtractorPartialError) {
+                            if (window.confirm('Error parsing ' + name + ':\n' + e.message + '\n\nLoad the file anyway?')) {
+                                translations = e.translations;
+                            }
+                        } else {
+                            throw e;
+                        }
+                    }
+                    if (translations !== undefined) {
+                        new TranslationsView(name, translations);
+                    }
                 } catch (e) {
                     window.alert('Error parsing ' + name + ':\n' + (e.message || e.toString()));
                 }

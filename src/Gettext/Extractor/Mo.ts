@@ -1,6 +1,8 @@
 import Translation from '../Translation';
 import Translations from '../Translations';
+import PartialLoadError from './PartialLoadError';
 import Charset from '../Charset';
+
 
 /**
  * Extract translations from a gettext .mo file
@@ -20,7 +22,6 @@ export default class Mo {
     private stringIndex: number;
     private charset: string;
     private constructor(data: DataView) {
-        debugger;
         this.data = data;
         this.littleEndian = true;
         this.offset = 0;
@@ -125,29 +126,38 @@ export default class Mo {
         mo.charset = Translations.DEFAULT_CHARSET;
         let translations = Translations.createEmpty()
         let translation: Translation | string | null;
-        while ((translation = mo.getNextTranslation()) !== null) {
-            if (typeof translation === 'string') {
-                translation.split('\n').forEach(function (header: string) {
-                    header = header.replace(/^\s+|\s+$/g, '');
-                    if (header.length === 0) {
-                        return;
+        let numLoadedStrings = 0;
+        try {
+            while ((translation = mo.getNextTranslation()) !== null) {
+                if (typeof translation === 'string') {
+                    translation.split('\n').forEach(function (header: string) {
+                        header = header.replace(/^\s+|\s+$/g, '');
+                        if (header.length === 0) {
+                            return;
+                        }
+                        let colonIndex = header.indexOf(':');
+                        if (colonIndex > 0) {
+                            let headerName = header.substr(0, colonIndex).replace(/\s+$/, '');
+                            let headerValue = header.length === colonIndex + 1 ? '' : header.substr(colonIndex + 1).replace(/^\s+/, '');
+                            translations.setHeader(headerName, headerValue);
+                        } else {
+                            translations.setHeader(header, '');
+                        }
+                    });
+                    let newCharset = translations.getCharset(true);
+                    if (newCharset !== mo.charset) {
+                        mo.charset = newCharset;
                     }
-                    let colonIndex = header.indexOf(':');
-                    if (colonIndex > 0) {
-                        let headerName = header.substr(0, colonIndex).replace(/\s+$/, '');
-                        let headerValue = header.length === colonIndex + 1 ? '' : header.substr(colonIndex + 1).replace(/^\s+/, '');
-                        translations.setHeader(headerName, headerValue);
-                    } else {
-                        translations.setHeader(header, '');
-                    }
-                });
-                let newCharset = translations.getCharset(true);
-                if (newCharset !== mo.charset) {
-                    mo.charset = newCharset;
+                } else {
+                    translations.add(translation);
+                    numLoadedStrings++;
                 }
-            } else {
-                translations.add(translation);
             }
+        } catch (e) {
+            if (numLoadedStrings === 0) {
+                throw e;
+            }
+            throw new PartialLoadError(e.message || e.toString(), mo.numberOfStrings, numLoadedStrings, translations);
         }
         return translations;
     }
