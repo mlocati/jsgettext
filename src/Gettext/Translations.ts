@@ -258,7 +258,7 @@ export default class Translations {
         let oldPluralCount: number | null = this.pluralForms ? this.pluralForms.numPlurals : null;
         pluralFormula = pluralFormula.replace(/^\s+/, '').replace(/[\s;]+$/, '');
         this.pluralForms = { numPlurals: numPlurals, pluralFormula: pluralFormula };
-        this.headers.set(Translations.HEADER_PLURALFORMS, 'nplurals=' + numPlurals.toString() + '; ' + pluralFormula + ';');
+        this.headers.set(Translations.HEADER_PLURALFORMS, 'nplurals=' + numPlurals.toString() + '; plural=' + pluralFormula + ';');
         if (oldPluralCount !== numPlurals) {
             this.list.values().forEach((translation: Translation): void => {
                 if (translation.hasPlural) {
