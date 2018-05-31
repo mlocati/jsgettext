@@ -15,6 +15,7 @@ import OperatorArgumentType from './Gettext/Operator/ArgumentType';
 import Operator from './Gettext/Operator/Operator';
 import MultipleOperator from './Gettext/Operator/Multiple';
 import SourceDiffOperator from './Gettext/Operator/Multiple/SourceDiff';
+import MergeTranslationsOperator from './Gettext/Operator/Multiple/MergeTranslations';
 import SingleOperator from './Gettext/Operator/Single';
 import ToPotOperator from './Gettext/Operator/Single/ToPot';
 import ToPoOperator from './Gettext/Operator/Single/ToPo';
@@ -963,6 +964,7 @@ $(() => {
         let $operators = $('#operators');
         [
             new SourceDiffOperator(),
+            new MergeTranslationsOperator(),
         ].forEach((operator: MultipleOperator) => {
             $operators.append($('<li />')
                 .tooltip({

@@ -281,12 +281,26 @@ export default class Translations {
     }
 
     /**
+     * Get all the translations with their keys.
+     */
+    public getTranslationsDictionary() : {key: string, value: Translation}[] {
+        return this.list.all();
+    }
+
+    /**
      * Check if this set contains a translation ID.
      *
      * @param translationId
      */
     public hasTranslationId(translationId: string): boolean {
         return this.list.has(translationId);
+    }
+
+    /**
+     * Get a translation by its ID (if found)
+     */
+    public getTranslationById(translationId: string): Translation|null {
+        return translationId !== null && translationId !== '' && this.list.has(translationId) ?  this.list.get(translationId) : null;
     }
 
     /**
